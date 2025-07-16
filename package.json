@@ -1,7 +1,7 @@
 {
   "name": "payload-plugin-mcp",
   "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "description": "A PayloadCMS plugin that spins up an MCP server compatible with Claude Desktop",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -43,7 +43,12 @@
     "prepublishOnly": "pnpm clean && pnpm build",
     "test": "pnpm test:int && pnpm test:e2e",
     "test:e2e": "playwright test",
-    "test:int": "vitest"
+    "test:int": "vitest",
+    "validate:mcp": "tsx src/scripts/validate-mcp.ts",
+    "validate:mcp:demo": "tsx src/scripts/validate-mcp.ts --start-demo",
+    "demo:server": "tsx -e \"import('./src/lib/mcpServer.js').then(m => m.createStandaloneMcpServer([], { port: 3001, apiKey: process.env.MCP_API_KEY || 'demo-key' }))\"",
+    "check:types": "tsc --noEmit",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -76,6 +81,7 @@
     "rimraf": "3.0.2",
     "sharp": "0.34.2",
     "sort-package-json": "^2.10.0",
+    "tsx": "^4.19.2",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.2"
@@ -116,5 +122,12 @@
     ]
   },
   "registry": "https://registry.npmjs.org/",
-  "dependencies": {}
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.5",
+    "zod": "^3.24.1",
+    "fastify": "^5.2.0",
+    "@fastify/cors": "^10.0.1",
+    "json-schema": "^0.4.0",
+    "ts-json-schema-generator": "^2.3.0"
+  }
 }
