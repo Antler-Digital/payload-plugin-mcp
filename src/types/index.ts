@@ -39,6 +39,40 @@ export interface ToolOperations {
   delete?: boolean
 }
 
+// Collection-specific configuration
+export interface CollectionMcpOptions {
+  /**
+   * Operations to enable for this collection
+   */
+  operations?: ToolOperations
+  /**
+   * Custom tool naming prefix (defaults to collection slug)
+   */
+  toolPrefix?: string
+  /**
+   * Custom description for this collection's tools
+   */
+  description?: string
+  /**
+   * Fields to exclude from schemas
+   */
+  excludeFields?: string[]
+  /**
+   * Additional metadata for this collection
+   */
+  metadata?: Record<string, any>
+}
+
+// Collection configuration can be either:
+// 1. Direct collection config
+// 2. Object with collection and options
+export type CollectionMcpConfig = 
+  | CollectionConfig 
+  | {
+      collection: CollectionConfig
+      options: CollectionMcpOptions
+    }
+
 export interface AuthConfig {
   apiKey: string
 }
@@ -124,7 +158,7 @@ export interface PayloadDeleteParams {
   id: string
 }
 
-// Collection field analysis
+// Collection field analysis (updated to include options)
 export interface FieldAnalysis {
   name: string
   type: string
@@ -141,6 +175,7 @@ export interface CollectionAnalysis {
   hasUpload: boolean
   hasAuth: boolean
   timestamps: boolean
+  mcpOptions?: CollectionMcpOptions
 }
 
 // MCP Protocol types

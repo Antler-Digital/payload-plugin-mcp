@@ -371,10 +371,33 @@ Examples:
       },
     ]
 
-    const toolDescriptors = generateToolDescriptors(mockCollections as any, {
-      list: true,
-      get: true,
-    })
+    // Convert to CollectionAnalysis format
+    const collectionAnalyses = mockCollections.map(col => ({
+      slug: col.slug,
+      fields: col.fields.map(field => ({
+        name: field.name,
+        type: field.type,
+        required: field.required || false,
+        hasDefault: false,
+        description: undefined,
+        options: field.options || undefined,
+        validation: undefined,
+      })),
+      hasUpload: false,
+      hasAuth: false,
+      timestamps: col.timestamps,
+      mcpOptions: {
+        operations: {
+          list: true,
+          get: true,
+          create: false,
+          update: false,
+          delete: false,
+        },
+      },
+    }))
+
+    const toolDescriptors = generateToolDescriptors(collectionAnalyses)
 
     await createStandaloneMcpServer(toolDescriptors, {
       port: parseInt(serverUrl.split(':').pop() || '3001'),

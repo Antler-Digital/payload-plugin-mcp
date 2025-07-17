@@ -12,6 +12,8 @@ A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) s
 - 📊 **Rich JSON Schemas**: Automatically generated schemas from collection fields
 - 🔄 **Real-time Updates**: SSE support for real-time communication
 - 📝 **Full Claude Desktop Integration**: Ready to use with Claude Desktop
+- 🎛️ **Per-Collection Control**: Configure operations individually for each collection
+- 🏷️ **Custom Tool Naming**: Custom prefixes and descriptions per collection
 
 ## Installation
 
@@ -36,6 +38,10 @@ MCP_SERVER_HOST=0.0.0.0
 
 ### 2. Add to PayloadCMS Config
 
+The plugin supports multiple configuration formats for maximum flexibility:
+
+#### Option 1: Simple - Expose All Collections
+
 ```typescript
 // payload.config.ts
 import { buildConfig } from 'payload'
@@ -43,72 +49,120 @@ import { payloadPluginMcp } from 'payload-plugin-mcp'
 
 export default buildConfig({
   collections: [
-    {
-      slug: 'posts',
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'content',
-          type: 'richText',
-        },
-        {
-          name: 'status',
-          type: 'select',
-          options: ['draft', 'published'],
-          defaultValue: 'draft',
-        },
-      ],
-    },
-    {
-      slug: 'users',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'email',
-          type: 'email',
-          required: true,
-        },
-      ],
-    },
+    // your collections here
   ],
   plugins: [
     payloadPluginMcp({
-      // API key from environment variable
       apiKey: process.env.MCP_API_KEY,
-      
-      // Collections to expose (default: 'all')
-      collections: {
-        posts: true,
-        users: true,
-      },
-      
-      // Operations to enable (default: list and get only)
-      operations: {
+      collections: 'all', // Expose all collections with default operations
+      defaultOperations: {
         list: true,
         get: true,
-        create: false, // Set to true to enable creation
-        update: false, // Set to true to enable updates
-        delete: false, // Set to true to enable deletion
+        create: false,
+        update: false,
+        delete: false,
       },
-      
-      // Server configuration
-      port: parseInt(process.env.MCP_SERVER_PORT || '3001'),
-      host: process.env.MCP_SERVER_HOST || '0.0.0.0',
-      
-      // Server identification
-      serverName: 'My PayloadCMS MCP Server',
-      serverDescription: 'MCP server providing access to PayloadCMS collections',
     }),
   ],
-  // ... rest of your config
+})
+```
+
+#### Option 2: Import Collections Directly
+
+```typescript
+// payload.config.ts
+import { buildConfig } from 'payload'
+import { payloadPluginMcp } from 'payload-plugin-mcp'
+// Import your collections
+import { Posts } from './collections/Posts'
+import { Users } from './collections/Users'
+import { Media } from './collections/Media'
+
+export default buildConfig({
+  collections: [Posts, Users, Media],
+  plugins: [
+    payloadPluginMcp({
+      apiKey: process.env.MCP_API_KEY,
+      // Pass collections directly (like Payload's native format)
+      collections: [
+        Posts,    // Uses default operations
+        Users,    // Uses default operations  
+        Media,    // Uses default operations
+      ],
+      defaultOperations: {
+        list: true,
+        get: true,
+        create: false,
+        update: false,
+        delete: false,
+      },
+    }),
+  ],
+})
+```
+
+#### Option 3: Advanced - Per-Collection Configuration
+
+```typescript
+// payload.config.ts
+import { buildConfig } from 'payload'
+import { payloadPluginMcp } from 'payload-plugin-mcp'
+import { Posts } from './collections/Posts'
+import { Users } from './collections/Users'
+import { Media } from './collections/Media'
+
+export default buildConfig({
+  collections: [Posts, Users, Media],
+  plugins: [
+    payloadPluginMcp({
+      apiKey: process.env.MCP_API_KEY,
+      collections: [
+        // Simple collection (uses default operations)
+        Posts,
+        
+        // Collection with custom options
+        {
+          collection: Users,
+          options: {
+            operations: {
+              list: true,
+              get: true,
+              create: true,  // Enable creation for users
+              update: true,  // Enable updates for users
+              delete: false, // Keep delete disabled
+            },
+            toolPrefix: 'user',         // Custom tool prefix
+            description: 'user management', // Custom description
+            excludeFields: ['password'], // Hide sensitive fields
+          },
+        },
+        
+        // Media with different settings
+        {
+          collection: Media,
+          options: {
+            operations: {
+              list: true,
+              get: true,
+              create: true,
+              update: false,
+              delete: true, // Allow media deletion
+            },
+            toolPrefix: 'file',
+            description: 'file storage',
+          },
+        },
+      ],
+      // Default operations for collections without specific config
+      defaultOperations: {
+        list: true,
+        get: true,
+        create: false,
+        update: false,
+        delete: false,
+      },
+    }),
+  ],
 })
 ```
 
@@ -126,18 +180,29 @@ The plugin will automatically:
 Expected output:
 ```
 ✅ PayloadCMS MCP Plugin initialized
-🔧 Collections exposed: posts, users
-🛠️  Tools generated: 4
+🔧 Collections exposed: posts, users, media
+🛠️  Tools generated: 8
 🌐 MCP HTTP server: http://0.0.0.0:3001/mcp
 📡 SSE endpoint: http://0.0.0.0:3001/mcp/sse
 🔐 Authentication: Enabled
+   📋 posts: list, get
+   📋 users: list, get, create, update
+   📋 media: list, get, create, delete
 ```
 
 ## Generated Tools
 
-For each collection, the plugin generates tools based on enabled operations:
+The plugin generates tools based on your collection configuration:
 
-### List Tools (`{collection}_list`)
+### For the advanced configuration example above:
+
+1. **posts_list** / **posts_get** - Basic read operations
+2. **user_list** / **user_get** / **user_create** / **user_update** - Full CRUD except delete
+3. **file_list** / **file_get** / **file_create** / **file_delete** - File management tools
+
+### Tool Examples
+
+#### List Tool (`posts_list`)
 ```json
 {
   "name": "posts_list",
@@ -152,32 +217,79 @@ For each collection, the plugin generates tools based on enabled operations:
 }
 ```
 
-### Get Tools (`{collection}_get`)
+#### Custom Tool (`user_create`)
 ```json
 {
-  "name": "posts_get",
-  "description": "Get a single document by ID from the posts collection",
+  "name": "user_create",
+  "description": "Create a new document in the user management",
   "input": {
-    "id": "document-id-here",
+    "data": {
+      "name": "John Doe",
+      "email": "john@example.com"
+      // Note: 'password' field excluded due to excludeFields config
+    },
     "depth": 1
   }
 }
 ```
 
-### Create Tools (`{collection}_create`)
-```json
-{
-  "name": "posts_create",
-  "description": "Create a new document in the posts collection",
-  "input": {
-    "data": {
-      "title": "New Post Title",
-      "content": { "type": "richText", "content": "..." },
-      "status": "draft"
-    },
-    "depth": 1
+## Collection Configuration Options
+
+### CollectionMcpOptions
+
+```typescript
+interface CollectionMcpOptions {
+  /**
+   * Operations to enable for this collection
+   */
+  operations?: {
+    list?: boolean     // List documents with filtering/pagination
+    get?: boolean      // Get single document by ID
+    create?: boolean   // Create new documents
+    update?: boolean   // Update existing documents
+    delete?: boolean   // Delete documents
   }
+  
+  /**
+   * Custom tool naming prefix (defaults to collection slug)
+   * Example: 'user' generates 'user_list', 'user_get', etc.
+   */
+  toolPrefix?: string
+  
+  /**
+   * Custom description for this collection's tools
+   * Used in tool descriptions: "List documents from the {description}"
+   */
+  description?: string
+  
+  /**
+   * Fields to exclude from schemas (useful for sensitive data)
+   * Example: ['password', 'secret', 'internal']
+   */
+  excludeFields?: string[]
+  
+  /**
+   * Additional metadata for this collection
+   */
+  metadata?: Record<string, any>
 }
+```
+
+### Configuration Formats
+
+```typescript
+// Format 1: All collections with defaults
+collections: 'all'
+
+// Format 2: Direct collection imports
+collections: [Posts, Users, Media]
+
+// Format 3: Mixed configuration
+collections: [
+  Posts,                          // Uses defaults
+  { collection: Users, options: {...} }, // Custom config
+  Media,                          // Uses defaults
+]
 ```
 
 ## Claude Desktop Integration
@@ -239,6 +351,81 @@ The plugin supports API key authentication:
 2. Include the API key in requests:
    - Header: `Authorization: Bearer your-api-key`
    - Query parameter: `?api_key=your-api-key`
+
+## Advanced Usage Examples
+
+### Content Management System
+
+```typescript
+// CMS with different access levels
+payloadPluginMcp({
+  collections: [
+    // Public content - read-only
+    { 
+      collection: Posts, 
+      options: { 
+        operations: { list: true, get: true },
+        description: 'blog posts'
+      }
+    },
+    
+    // Admin content - full access
+    { 
+      collection: Pages, 
+      options: { 
+        operations: { list: true, get: true, create: true, update: true, delete: true },
+        toolPrefix: 'page',
+        description: 'website pages'
+      }
+    },
+    
+    // Media - managed uploads
+    { 
+      collection: Media, 
+      options: { 
+        operations: { list: true, get: true, create: true, delete: true },
+        toolPrefix: 'asset',
+        description: 'media assets'
+      }
+    },
+  ],
+})
+```
+
+### E-commerce Setup
+
+```typescript
+// E-commerce with product management
+payloadPluginMcp({
+  collections: [
+    // Products - full management
+    { 
+      collection: Products, 
+      options: { 
+        operations: { list: true, get: true, create: true, update: true },
+        excludeFields: ['internalNotes', 'cost']
+      }
+    },
+    
+    // Orders - read and update only
+    { 
+      collection: Orders, 
+      options: { 
+        operations: { list: true, get: true, update: true },
+        excludeFields: ['paymentDetails']
+      }
+    },
+    
+    // Categories - read-only
+    { 
+      collection: Categories, 
+      options: { 
+        operations: { list: true, get: true }
+      }
+    },
+  ],
+})
+```
 
 ## Vercel Deployment
 
@@ -353,8 +540,8 @@ npx @modelcontextprotocol/inspector http://localhost:3001/mcp/sse?api_key=your-a
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `apiKey` | string | `process.env.MCP_API_KEY` | API key for authentication |
-| `collections` | object \| 'all' | 'all' | Collections to expose |
-| `operations` | object | `{list: true, get: true}` | Operations to enable |
+| `collections` | CollectionMcpConfig[] \| 'all' | 'all' | Collections to expose |
+| `defaultOperations` | ToolOperations | `{list: true, get: true}` | Default operations for collections |
 | `port` | number | 3001 | Server port |
 | `host` | string | '0.0.0.0' | Server host |
 | `enableHttpTransport` | boolean | true | Enable HTTP server |
@@ -373,11 +560,11 @@ npx @modelcontextprotocol/inspector http://localhost:3001/mcp/sse?api_key=your-a
 
 2. **"Tool not found"**
    - Verify that the collection is included in the plugin configuration
-   - Check that the operation is enabled in the `operations` config
+   - Check that the operation is enabled in the collection's operations config
 
-3. **"Payload instance not available"**
-   - Ensure PayloadCMS is properly initialized
-   - Check that the request has access to the payload instance
+3. **"Collection not found in registered collections"**
+   - Ensure imported collections are also added to the main collections array
+   - Check collection slug matches between import and registration
 
 ### Debug Mode
 
@@ -396,58 +583,6 @@ Check server status:
 
 ```bash
 curl http://localhost:3001/health
-```
-
-## Advanced Usage
-
-### Custom Tool Filtering
-
-```typescript
-payloadPluginMcp({
-  collections: {
-    posts: true,
-    users: true,
-    // Exclude sensitive collections
-    // secrets: false (default)
-  },
-  operations: {
-    list: true,
-    get: true,
-    create: true, // Enable for specific use cases
-    update: false, // Disable for safety
-    delete: false, // Disable for safety
-  },
-})
-```
-
-### Standalone Server
-
-Create a standalone MCP server without PayloadCMS:
-
-```typescript
-import { createStandaloneMcpServer, generateToolDescriptors } from 'payload-plugin-mcp'
-
-// Mock collections for demonstration
-const mockCollections = [
-  {
-    slug: 'posts',
-    fields: [
-      { name: 'title', type: 'text', required: true },
-      { name: 'content', type: 'richText' },
-    ],
-  },
-]
-
-const toolDescriptors = generateToolDescriptors(mockCollections, {
-  list: true,
-  get: true,
-})
-
-await createStandaloneMcpServer(toolDescriptors, {
-  port: 3001,
-  apiKey: 'your-api-key',
-  serverName: 'Demo MCP Server',
-})
 ```
 
 ## Contributing

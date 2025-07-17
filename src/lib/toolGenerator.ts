@@ -5,40 +5,54 @@ import {
   FieldAnalysis, 
   CollectionAnalysis,
   ToolOperation,
-  JSONSchema7 
+  JSONSchema7,
+  CollectionMcpOptions 
 } from '../types/index.js'
 
 /**
- * Generate MCP tool descriptors from PayloadCMS collections
+ * Generate MCP tool descriptors from PayloadCMS collections with their MCP configurations
  */
 export function generateToolDescriptors(
-  collections: CollectionConfig[],
-  operations: ToolOperations
+  collectionAnalyses: CollectionAnalysis[]
 ): ToolDescriptor[] {
   const descriptors: ToolDescriptor[] = []
 
-  for (const collection of collections) {
-    const analysis = analyzeCollection(collection)
+  for (const analysis of collectionAnalyses) {
+    // Get the complete collection analysis (populate fields if needed)
+    const completeAnalysis = analysis.fields.length > 0 
+      ? analysis 
+      : completeCollectionAnalysis(analysis)
+    
+    const operations = completeAnalysis.mcpOptions?.operations || {
+      list: true,
+      get: true,
+      create: false,
+      update: false,
+      delete: false,
+    }
+
+    const toolPrefix = completeAnalysis.mcpOptions?.toolPrefix || completeAnalysis.slug
+    const collectionDescription = completeAnalysis.mcpOptions?.description || `${completeAnalysis.slug} collection`
     
     // Generate tools based on enabled operations
     if (operations.list) {
-      descriptors.push(createListTool(analysis))
+      descriptors.push(createListTool(completeAnalysis, toolPrefix, collectionDescription))
     }
     
     if (operations.get) {
-      descriptors.push(createGetTool(analysis))
+      descriptors.push(createGetTool(completeAnalysis, toolPrefix, collectionDescription))
     }
     
     if (operations.create) {
-      descriptors.push(createCreateTool(analysis))
+      descriptors.push(createCreateTool(completeAnalysis, toolPrefix, collectionDescription))
     }
     
     if (operations.update) {
-      descriptors.push(createUpdateTool(analysis))
+      descriptors.push(createUpdateTool(completeAnalysis, toolPrefix, collectionDescription))
     }
     
     if (operations.delete) {
-      descriptors.push(createDeleteTool(analysis))
+      descriptors.push(createDeleteTool(completeAnalysis, toolPrefix, collectionDescription))
     }
   }
 
@@ -46,16 +60,42 @@ export function generateToolDescriptors(
 }
 
 /**
+ * Complete collection analysis by populating fields if they're missing
+ * This is a helper to handle cases where we only have basic info
+ */
+function completeCollectionAnalysis(analysis: CollectionAnalysis): CollectionAnalysis {
+  // If we already have fields, return as-is
+  if (analysis.fields.length > 0) {
+    return analysis
+  }
+
+  // For now, return the analysis as-is since we don't have access to the full collection config here
+  // In a real implementation, you might want to store the full collection config in the analysis
+  return analysis
+}
+
+/**
  * Analyze a PayloadCMS collection to extract field information
  */
-function analyzeCollection(collection: CollectionConfig): CollectionAnalysis {
+export function analyzeCollection(
+  collection: CollectionConfig, 
+  mcpOptions?: CollectionMcpOptions
+): CollectionAnalysis {
   const fields = collection.fields || []
   const fieldAnalyses: FieldAnalysis[] = []
+  const excludeFields = mcpOptions?.excludeFields || []
 
   // Recursively analyze fields (including nested fields in groups, rows, etc.)
   function analyzeFields(fields: Field[], prefix = ''): void {
     for (const field of fields) {
       if ('name' in field && field.name) {
+        const fieldName = prefix ? `${prefix}.${field.name}` : field.name
+        
+        // Skip excluded fields
+        if (excludeFields.includes(fieldName)) {
+          continue
+        }
+
         const analysis = analyzeField(field, prefix)
         if (analysis) {
           fieldAnalyses.push(analysis)
@@ -87,6 +127,7 @@ function analyzeCollection(collection: CollectionConfig): CollectionAnalysis {
     hasUpload: Boolean(collection.upload),
     hasAuth: Boolean(collection.auth),
     timestamps: collection.timestamps !== false,
+    mcpOptions,
   }
 }
 
@@ -124,10 +165,14 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
 /**
  * Create a list tool for a collection
  */
-function createListTool(analysis: CollectionAnalysis): ToolDescriptor {
+function createListTool(
+  analysis: CollectionAnalysis, 
+  toolPrefix: string, 
+  collectionDescription: string
+): ToolDescriptor {
   return {
-    name: `${analysis.slug}_list`,
-    description: `List documents from the ${analysis.slug} collection with optional filtering, pagination, and sorting`,
+    name: `${toolPrefix}_list`,
+    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting`,
     collection: analysis.slug,
     operation: 'list' as ToolOperation,
     inputSchema: {
@@ -217,10 +262,14 @@ function createListTool(analysis: CollectionAnalysis): ToolDescriptor {
 /**
  * Create a get tool for a collection
  */
-function createGetTool(analysis: CollectionAnalysis): ToolDescriptor {
+function createGetTool(
+  analysis: CollectionAnalysis, 
+  toolPrefix: string, 
+  collectionDescription: string
+): ToolDescriptor {
   return {
-    name: `${analysis.slug}_get`,
-    description: `Get a single document by ID from the ${analysis.slug} collection`,
+    name: `${toolPrefix}_get`,
+    description: `Get a single document by ID from the ${collectionDescription}`,
     collection: analysis.slug,
     operation: 'get' as ToolOperation,
     inputSchema: {
@@ -247,10 +296,14 @@ function createGetTool(analysis: CollectionAnalysis): ToolDescriptor {
 /**
  * Create a create tool for a collection
  */
-function createCreateTool(analysis: CollectionAnalysis): ToolDescriptor {
+function createCreateTool(
+  analysis: CollectionAnalysis, 
+  toolPrefix: string, 
+  collectionDescription: string
+): ToolDescriptor {
   return {
-    name: `${analysis.slug}_create`,
-    description: `Create a new document in the ${analysis.slug} collection`,
+    name: `${toolPrefix}_create`,
+    description: `Create a new document in the ${collectionDescription}`,
     collection: analysis.slug,
     operation: 'create' as ToolOperation,
     inputSchema: {
@@ -274,10 +327,14 @@ function createCreateTool(analysis: CollectionAnalysis): ToolDescriptor {
 /**
  * Create an update tool for a collection
  */
-function createUpdateTool(analysis: CollectionAnalysis): ToolDescriptor {
+function createUpdateTool(
+  analysis: CollectionAnalysis, 
+  toolPrefix: string, 
+  collectionDescription: string
+): ToolDescriptor {
   return {
-    name: `${analysis.slug}_update`,
-    description: `Update an existing document in the ${analysis.slug} collection`,
+    name: `${toolPrefix}_update`,
+    description: `Update an existing document in the ${collectionDescription}`,
     collection: analysis.slug,
     operation: 'update' as ToolOperation,
     inputSchema: {
@@ -305,10 +362,14 @@ function createUpdateTool(analysis: CollectionAnalysis): ToolDescriptor {
 /**
  * Create a delete tool for a collection
  */
-function createDeleteTool(analysis: CollectionAnalysis): ToolDescriptor {
+function createDeleteTool(
+  analysis: CollectionAnalysis, 
+  toolPrefix: string, 
+  collectionDescription: string
+): ToolDescriptor {
   return {
-    name: `${analysis.slug}_delete`,
-    description: `Delete a document from the ${analysis.slug} collection`,
+    name: `${toolPrefix}_delete`,
+    description: `Delete a document from the ${collectionDescription}`,
     collection: analysis.slug,
     operation: 'delete' as ToolOperation,
     inputSchema: {
