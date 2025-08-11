@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import type { 
+import type {
   McpServerHandlerConfig,
   McpListToolsResponse,
   McpInvokeRequest,
@@ -9,7 +9,7 @@ import type {
   McpInitializeResponse,
   McpRequest,
   McpResponse,
-  SseEvent
+  SseEvent,
 } from '../types/index.js'
 
 /**
@@ -25,16 +25,16 @@ export function mcpServerHandler(config: McpServerHandlerConfig) {
 
         if (!apiKey || apiKey !== config.apiKey) {
           return new Response(
-            JSON.stringify({ 
-              error: { 
-                code: 401, 
-                message: 'Invalid or missing API key' 
-              } 
+            JSON.stringify({
+              error: {
+                code: 401,
+                message: 'Invalid or missing API key',
+              },
             }),
-            { 
-              status: 401, 
-              headers: { 'Content-Type': 'application/json' } 
-            }
+            {
+              status: 401,
+              headers: { 'Content-Type': 'application/json' },
+            },
           )
         }
       }
@@ -66,20 +66,19 @@ export function mcpServerHandler(config: McpServerHandlerConfig) {
       }
 
       return new Response('Not Found', { status: 404 })
-
     } catch (error) {
       console.error('MCP Server Handler Error:', error)
       return new Response(
-        JSON.stringify({ 
-          error: { 
-            code: 500, 
-            message: 'Internal server error' 
-          } 
+        JSON.stringify({
+          error: {
+            code: 500,
+            message: 'Internal server error',
+          },
         }),
-        { 
-          status: 500, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
   }
@@ -90,7 +89,7 @@ export function mcpServerHandler(config: McpServerHandlerConfig) {
  */
 async function handleListTools(config: McpServerHandlerConfig): Promise<Response> {
   const response: McpListToolsResponse = {
-    tools: config.toolDescriptors.map(descriptor => ({
+    tools: config.toolDescriptors.map((descriptor) => ({
       name: descriptor.name,
       description: descriptor.description,
       inputSchema: descriptor.inputSchema,
@@ -111,30 +110,33 @@ async function handleListTools(config: McpServerHandlerConfig): Promise<Response
 /**
  * Handle tool invocation endpoint
  */
-async function handleInvoke(req: PayloadRequest, config: McpServerHandlerConfig): Promise<Response> {
+async function handleInvoke(
+  req: PayloadRequest,
+  config: McpServerHandlerConfig,
+): Promise<Response> {
   try {
     // Check if the request has a json method and body
     if (!req.json || typeof req.json !== 'function') {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: false,
           error: {
             code: 'INVALID_REQUEST',
             message: 'Request body is required',
           },
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
-    const requestBody = await req.json() as McpInvokeRequest
+    const requestBody = (await req.json()) as McpInvokeRequest
     const { tool, input } = requestBody
 
     // Find the tool descriptor
-    const toolDescriptor = config.toolDescriptors.find(t => t.name === tool)
+    const toolDescriptor = config.toolDescriptors.find((t) => t.name === tool)
     if (!toolDescriptor) {
       const response: McpInvokeResponse = {
         success: false,
@@ -151,7 +153,7 @@ async function handleInvoke(req: PayloadRequest, config: McpServerHandlerConfig)
 
     // Execute the tool
     const result = await executeTool(toolDescriptor, input, req)
-    
+
     const response: McpInvokeResponse = {
       success: true,
       result,
@@ -160,7 +162,6 @@ async function handleInvoke(req: PayloadRequest, config: McpServerHandlerConfig)
     return new Response(JSON.stringify(response), {
       headers: { 'Content-Type': 'application/json' },
     })
-
   } catch (error) {
     console.error('Tool invocation error:', error)
     const response: McpInvokeResponse = {
@@ -181,7 +182,10 @@ async function handleInvoke(req: PayloadRequest, config: McpServerHandlerConfig)
 /**
  * Handle schema endpoint
  */
-async function handleSchemas(req: PayloadRequest, config: McpServerHandlerConfig): Promise<Response> {
+async function handleSchemas(
+  req: PayloadRequest,
+  config: McpServerHandlerConfig,
+): Promise<Response> {
   const url = new URL(req.url || '', `http://${req.headers.get('host')}`)
   const toolName = url.pathname.split('/').pop()
 
@@ -189,7 +193,7 @@ async function handleSchemas(req: PayloadRequest, config: McpServerHandlerConfig
     return new Response('Tool name required', { status: 400 })
   }
 
-  const toolDescriptor = config.toolDescriptors.find(t => t.name === toolName)
+  const toolDescriptor = config.toolDescriptors.find((t) => t.name === toolName)
   if (!toolDescriptor) {
     return new Response('Tool not found', { status: 404 })
   }
@@ -211,13 +215,13 @@ async function handleSSE(req: PayloadRequest, config: McpServerHandlerConfig): P
   const headers = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
+    Connection: 'keep-alive',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Cache-Control',
   }
 
   const encoder = new TextEncoder()
-  
+
   const stream = new ReadableStream({
     start(controller) {
       // Send initial endpoint event
@@ -226,9 +230,9 @@ async function handleSSE(req: PayloadRequest, config: McpServerHandlerConfig): P
         event: 'endpoint',
         data: JSON.stringify({ uri: endpointUrl }),
       }
-      
+
       controller.enqueue(encoder.encode(formatSseEvent(endpointEvent)))
-      
+
       // Send server capabilities
       const initResponse: McpInitializeResponse = {
         protocolVersion: '2024-11-05',
@@ -242,7 +246,7 @@ async function handleSSE(req: PayloadRequest, config: McpServerHandlerConfig): P
           version: '1.0.0',
         },
       }
-      
+
       const messageEvent: SseEvent = {
         event: 'message',
         data: JSON.stringify({
@@ -251,7 +255,7 @@ async function handleSSE(req: PayloadRequest, config: McpServerHandlerConfig): P
           result: initResponse,
         }),
       }
-      
+
       controller.enqueue(encoder.encode(formatSseEvent(messageEvent)))
 
       // Keep connection alive with periodic ping
@@ -282,30 +286,33 @@ async function handleSSE(req: PayloadRequest, config: McpServerHandlerConfig): P
 /**
  * Handle MCP protocol messages (JSON-RPC 2.0)
  */
-async function handleMcpMessage(req: PayloadRequest, config: McpServerHandlerConfig): Promise<Response> {
+async function handleMcpMessage(
+  req: PayloadRequest,
+  config: McpServerHandlerConfig,
+): Promise<Response> {
   try {
     // Check if the request has a json method and body
     if (!req.json || typeof req.json !== 'function') {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           jsonrpc: '2.0',
-          error: { 
-            code: -32700, 
-            message: 'Parse error' 
-          } 
+          error: {
+            code: -32700,
+            message: 'Parse error',
+          },
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
-    const message = await req.json() as McpRequest
+    const message = (await req.json()) as McpRequest
 
     if (message.method === 'initialize') {
       const params = message.params as McpInitializeParams
-      
+
       const response: McpResponse = {
         jsonrpc: '2.0',
         id: message.id,
@@ -333,7 +340,7 @@ async function handleMcpMessage(req: PayloadRequest, config: McpServerHandlerCon
         jsonrpc: '2.0',
         id: message.id,
         result: {
-          tools: config.toolDescriptors.map(descriptor => ({
+          tools: config.toolDescriptors.map((descriptor) => ({
             name: descriptor.name,
             description: descriptor.description,
             inputSchema: descriptor.inputSchema,
@@ -348,8 +355,8 @@ async function handleMcpMessage(req: PayloadRequest, config: McpServerHandlerCon
 
     if (message.method === 'tools/call') {
       const { name, arguments: args } = message.params as { name: string; arguments: any }
-      
-      const toolDescriptor = config.toolDescriptors.find(t => t.name === name)
+
+      const toolDescriptor = config.toolDescriptors.find((t) => t.name === name)
       if (!toolDescriptor) {
         const response: McpResponse = {
           jsonrpc: '2.0',
@@ -366,7 +373,7 @@ async function handleMcpMessage(req: PayloadRequest, config: McpServerHandlerCon
       }
 
       const result = await executeTool(toolDescriptor, args, req)
-      
+
       const response: McpResponse = {
         jsonrpc: '2.0',
         id: message.id,
@@ -399,21 +406,20 @@ async function handleMcpMessage(req: PayloadRequest, config: McpServerHandlerCon
       status: 404,
       headers: { 'Content-Type': 'application/json' },
     })
-
   } catch (error) {
     console.error('MCP message handling error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         jsonrpc: '2.0',
-        error: { 
-          code: -32603, 
-          message: 'Internal error' 
-        } 
+        error: {
+          code: -32603,
+          message: 'Internal error',
+        },
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }
@@ -480,20 +486,20 @@ async function executeTool(toolDescriptor: any, input: any, req: PayloadRequest)
  */
 function formatSseEvent(event: SseEvent): string {
   let formatted = ''
-  
+
   if (event.event) {
     formatted += `event: ${event.event}\n`
   }
-  
+
   if (event.id) {
     formatted += `id: ${event.id}\n`
   }
-  
+
   if (event.retry) {
     formatted += `retry: ${event.retry}\n`
   }
-  
+
   formatted += `data: ${event.data}\n\n`
-  
+
   return formatted
 }

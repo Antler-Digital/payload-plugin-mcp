@@ -27,6 +27,13 @@ export default [
   {
     rules: {
       'no-restricted-exports': 'off',
+      'perfectionist/sort-imports': [
+        'error',
+        {
+          'imports-first': true,
+          'newlines-between': 'always',
+        },
+      ],
     },
   },
   {

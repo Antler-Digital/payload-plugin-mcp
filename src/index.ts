@@ -54,9 +54,10 @@ export type PayloadPluginMcpConfig = {
 export const payloadPluginMcp =
   (pluginOptions: PayloadPluginMcpConfig = {}) =>
   (config: Config): Config => {
+    console.log('pluginOptions', pluginOptions)
     // Default options
-    const options: Required<Omit<PayloadPluginMcpConfig, 'collections'>> & { 
-      collections: CollectionMcpConfig[] | 'all' 
+    const options: Required<Omit<PayloadPluginMcpConfig, 'collections'>> & {
+      collections: CollectionMcpConfig[] | 'all'
     } = {
       apiKey: pluginOptions.apiKey || process.env.MCP_API_KEY || '',
       collections: pluginOptions.collections || 'all',
@@ -84,7 +85,9 @@ export const payloadPluginMcp =
 
     // Validate API key
     if (!options.apiKey) {
-      console.warn('PayloadCMS MCP Plugin: No API key provided. Set MCP_API_KEY environment variable for authentication.')
+      console.warn(
+        'PayloadCMS MCP Plugin: No API key provided. Set MCP_API_KEY environment variable for authentication.',
+      )
     }
 
     // Initialize collections array if it doesn't exist
@@ -98,16 +101,20 @@ export const payloadPluginMcp =
     }
 
     // Get collections to expose with their MCP configurations
-    const collectionsToExpose = getCollectionsToExpose(config.collections, options.collections, options.defaultOperations)
-    
+    const collectionsToExpose = getCollectionsToExpose(
+      config.collections,
+      options.collections,
+      options.defaultOperations,
+    )
+
     // Generate tool descriptors from collections
     const toolDescriptors = generateToolDescriptors(collectionsToExpose)
 
     // Add MCP server endpoints
     config.endpoints.push(
       {
-        handler: mcpServerHandler({ 
-          toolDescriptors, 
+        handler: mcpServerHandler({
+          toolDescriptors,
           apiKey: options.apiKey,
           serverName: options.serverName,
           serverDescription: options.serverDescription,
@@ -116,8 +123,8 @@ export const payloadPluginMcp =
         path: '/mcp/list_tools',
       },
       {
-        handler: mcpServerHandler({ 
-          toolDescriptors, 
+        handler: mcpServerHandler({
+          toolDescriptors,
           apiKey: options.apiKey,
           serverName: options.serverName,
           serverDescription: options.serverDescription,
@@ -126,8 +133,8 @@ export const payloadPluginMcp =
         path: '/mcp/invoke',
       },
       {
-        handler: mcpServerHandler({ 
-          toolDescriptors, 
+        handler: mcpServerHandler({
+          toolDescriptors,
           apiKey: options.apiKey,
           serverName: options.serverName,
           serverDescription: options.serverDescription,
@@ -137,15 +144,15 @@ export const payloadPluginMcp =
       },
       // SSE endpoint for HTTP transport
       {
-        handler: mcpServerHandler({ 
-          toolDescriptors, 
+        handler: mcpServerHandler({
+          toolDescriptors,
           apiKey: options.apiKey,
           serverName: options.serverName,
           serverDescription: options.serverDescription,
         }),
         method: 'get',
         path: '/mcp/sse',
-      }
+      },
     )
 
     // Start MCP server if HTTP transport is enabled
@@ -177,14 +184,14 @@ export const payloadPluginMcp =
 
       // Log MCP server information
       console.log(`✅ PayloadCMS MCP Plugin initialized`)
-      console.log(`🔧 Collections exposed: ${collectionsToExpose.map(c => c.slug).join(', ')}`)
+      console.log(`🔧 Collections exposed: ${collectionsToExpose.map((c) => c.slug).join(', ')}`)
       console.log(`🛠️  Tools generated: ${toolDescriptors.length}`)
-      
+
       if (options.enableHttpTransport) {
         console.log(`🌐 MCP HTTP server: http://${options.host}:${options.port}/mcp`)
         console.log(`📡 SSE endpoint: http://${options.host}:${options.port}/mcp/sse`)
       }
-      
+
       if (options.apiKey) {
         console.log(`🔐 Authentication: Enabled`)
       } else {
@@ -192,9 +199,11 @@ export const payloadPluginMcp =
       }
 
       // Log per-collection configurations
-      collectionsToExpose.forEach(collection => {
+      collectionsToExpose.forEach((collection) => {
         const ops = collection.mcpOptions?.operations || options.defaultOperations
-        const enabledOps = Object.entries(ops).filter(([_, enabled]) => enabled).map(([op]) => op)
+        const enabledOps = Object.entries(ops)
+          .filter(([_, enabled]) => enabled)
+          .map(([op]) => op)
         console.log(`   📋 ${collection.slug}: ${enabledOps.join(', ')}`)
       })
     }
@@ -208,14 +217,15 @@ export const payloadPluginMcp =
 function getCollectionsToExpose(
   allCollections: CollectionConfig[],
   collectionsOption: CollectionMcpConfig[] | 'all',
-  defaultOperations: ToolOperations
+  defaultOperations: ToolOperations,
 ): CollectionAnalysis[] {
+  console.log(collectionsOption)
   if (collectionsOption === 'all') {
     // Return all collections with default operations, properly analyzed
-    return allCollections.map(collection => 
+    return allCollections.map((collection) =>
       analyzeCollection(collection, {
         operations: defaultOperations,
-      })
+      }),
     )
   }
 
@@ -242,12 +252,14 @@ function getCollectionsToExpose(
     }
 
     // Find the collection in allCollections to ensure it's registered
-    const registeredCollection = allCollections.find(c => c.slug === collection.slug)
+    const registeredCollection = allCollections.find((c) => c.slug === collection.slug)
     if (registeredCollection) {
       // Use the registered collection for analysis to ensure we have the complete config
       result.push(analyzeCollection(registeredCollection, mcpOptions))
     } else {
-      console.warn(`PayloadCMS MCP Plugin: Collection '${collection.slug}' not found in registered collections`)
+      console.warn(
+        `PayloadCMS MCP Plugin: Collection '${collection.slug}' not found in registered collections`,
+      )
     }
   }
 

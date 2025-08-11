@@ -59,9 +59,9 @@ const buildConfigWithMemoryDB = async () => {
     },
     plugins: [
       payloadPluginMcp({
-        collections: {
-          posts: true,
-        },
+        collections: 'all',
+        enableHttpTransport: false,
+        enableStdioTransport: true,
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
