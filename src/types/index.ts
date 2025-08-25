@@ -66,8 +66,8 @@ export interface CollectionMcpOptions {
 // Collection configuration can be either:
 // 1. Direct collection config
 // 2. Object with collection and options
-export type CollectionMcpConfig = 
-  | CollectionConfig 
+export type CollectionMcpConfig =
+  | CollectionConfig
   | {
       collection: CollectionConfig
       options: CollectionMcpOptions

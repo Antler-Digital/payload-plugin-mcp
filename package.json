@@ -1,24 +1,27 @@
 {
   "name": "payload-plugin-mcp",
   "version": "1.0.0",
-  "description": "A PayloadCMS plugin that spins up an MCP server compatible with Claude Desktop",
+  "description": "A PayloadCMS plugin that integrates with MCP (Model Context Protocol) to enable AI model communication and context sharing within PayloadCMS applications",
   "license": "MIT",
   "type": "module",
+  "author": "Antler Digital",
+  "contributors": [
+    {
+      "name": "Sam Loyd",
+      "email": "sam@antler.digital",
+      "url": "https://github.com/loyd0"
+    },
+    {
+      "name": "Jack McGregor",
+      "email": "jack@antler.digital",
+      "url": "https://github.com/j-mcgregor"
+    }
+  ],
   "exports": {
     ".": {
       "import": "./src/exports/index.ts",
       "types": "./src/exports/index.ts",
       "default": "./src/exports/index.ts"
-    },
-    "./client": {
-      "import": "./src/exports/client.ts",
-      "types": "./src/exports/client.ts",
-      "default": "./src/exports/client.ts"
-    },
-    "./rsc": {
-      "import": "./src/exports/rsc.ts",
-      "types": "./src/exports/rsc.ts",
-      "default": "./src/exports/rsc.ts"
     }
   },
   "main": "./src/exports/index.ts",
@@ -50,15 +53,23 @@
     "check:types": "tsc --noEmit",
     "format": "prettier --write ."
   },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "json-schema": "^0.4.0",
+    "mcp-handler": "^1.0.1",
+    "ts-json-schema-generator": "^2.3.0",
+    "zod": "^3.25.76"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
-    "@payloadcms/db-mongodb": "3.37.0",
-    "@payloadcms/db-postgres": "3.37.0",
-    "@payloadcms/db-sqlite": "3.37.0",
-    "@payloadcms/eslint-config": "3.9.0",
-    "@payloadcms/next": "3.37.0",
-    "@payloadcms/richtext-lexical": "3.37.0",
-    "@payloadcms/ui": "3.37.0",
+    "@payloadcms/db-mongodb": "latest",
+    "@payloadcms/db-postgres": "latest",
+    "@payloadcms/db-sqlite": "latest",
+    "@payloadcms/eslint-config": "latest",
+    "@payloadcms/next": "latest",
+    "@payloadcms/richtext-lexical": "latest",
+    "@payloadcms/ui": "latest",
     "@playwright/test": "^1.52.0",
     "@swc-node/register": "1.10.9",
     "@swc/cli": "0.6.0",
@@ -73,7 +84,7 @@
     "mongodb-memory-server": "10.1.4",
     "next": "15.3.0",
     "open": "^10.1.0",
-    "payload": "3.37.0",
+    "payload": "latest",
     "prettier": "^3.4.2",
     "qs-esm": "7.0.2",
     "react": "19.1.0",
@@ -87,10 +98,10 @@
     "vitest": "^3.1.2"
   },
   "peerDependencies": {
-    "payload": "^3.37.0"
+    "payload": "^latest"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0",
+    "node": "^18.20.2 || >=20.9.0 || >=22.0.0",
     "pnpm": "^9 || ^10"
   },
   "publishConfig": {
@@ -99,16 +110,6 @@
         "import": "./dist/exports/index.js",
         "types": "./dist/exports/index.d.ts",
         "default": "./dist/exports/index.js"
-      },
-      "./client": {
-        "import": "./dist/exports/client.js",
-        "types": "./dist/exports/client.d.ts",
-        "default": "./dist/exports/client.js"
-      },
-      "./rsc": {
-        "import": "./dist/exports/rsc.js",
-        "types": "./dist/exports/rsc.d.ts",
-        "default": "./dist/exports/rsc.js"
       }
     },
     "main": "./dist/exports/index.js",
@@ -122,14 +123,5 @@
     ]
   },
   "registry": "https://registry.npmjs.org/",
-  "dependencies": {
-    "@fastify/cors": "^10.0.1",
-    "@modelcontextprotocol/sdk": "^1.15.1",
-    "fastify": "^5.2.0",
-    "json-schema": "^0.4.0",
-    "mcp-handler": "^1.0.1",
-    "ts-json-schema-generator": "^2.3.0",
-    "zod": "^3.25.76"
-  },
-  "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531"
+  "packageManager": "pnpm@9.15.9"
 }
