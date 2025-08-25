@@ -12,6 +12,12 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        <title>PayloadCMS MCP Plugin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
       <body>
         <main>{children}</main>
       </body>
