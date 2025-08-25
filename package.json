@@ -68,6 +68,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@changesets/cli": "^2.29.6",
     "@fastify/cors": "^10.0.1",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "json-schema": "^0.4.0",
