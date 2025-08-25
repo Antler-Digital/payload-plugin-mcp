@@ -44,14 +44,9 @@
     "lint": "eslint",
     "lint:fix": "eslint ./src --fix",
     "prepublishOnly": "pnpm clean && pnpm build",
-    "test": "pnpm test:int && pnpm test:e2e",
-    "test:e2e": "playwright test",
-    "test:int": "vitest",
-    "validate:mcp": "tsx src/scripts/validate-mcp.ts",
-    "validate:mcp:demo": "tsx src/scripts/validate-mcp.ts --start-demo",
-    "demo:server": "tsx -e \"import('./src/lib/mcpServer.js').then(m => m.createStandaloneMcpServer([], { port: 3001, apiKey: process.env.MCP_API_KEY || 'demo-key' }))\"",
-    "check:types": "tsc --noEmit",
-    "format": "prettier --write ."
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
