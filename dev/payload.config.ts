@@ -3,7 +3,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { payloadPluginMcp } from 'payload-plugin-mcp'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
@@ -58,10 +58,16 @@ const buildConfigWithMemoryDB = async () => {
       await seed(payload)
     },
     plugins: [
-      payloadPluginMcp({
+      PayloadPluginMcp({
         collections: 'all',
-        enableHttpTransport: false,
-        enableStdioTransport: true,
+        apiKey: process.env.MCP_API_KEY || '',
+        defaultOperations: {
+          list: true,
+          get: true,
+          create: true,
+          update: true,
+          delete: true,
+        },
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
