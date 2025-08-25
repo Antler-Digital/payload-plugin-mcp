@@ -5,6 +5,20 @@
   "license": "MIT",
   "type": "module",
   "author": "Antler Digital",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Antler-Digital/payload-plugin-mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/Antler-Digital/payload-plugin-mcp/issues"
+  },
+  "homepage": "https://github.com/Antler-Digital/payload-plugin-mcp",
+  "keywords": [
+    "payload",
+    "mcp",
+    "model context protocol",
+    "ai"
+  ],
   "contributors": [
     {
       "name": "Sam Loyd",
@@ -37,6 +51,7 @@
     "changeset:version": "changeset version",
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
+    "cz": "echo \"Use pnpm changeset to create a new version\"",
     "dev": "next dev dev --turbo",
     "dev:generate-importmap": "pnpm dev:payload generate:importmap",
     "dev:generate-types": "pnpm dev:payload generate:types",
@@ -46,6 +61,7 @@
     "lint": "eslint",
     "lint:fix": "eslint ./src --fix",
     "prepublishOnly": "pnpm clean && pnpm build",
+    "release": "pnpm build && changeset version && changeset publish",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"

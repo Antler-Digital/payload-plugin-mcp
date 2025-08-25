@@ -1,5 +1,6 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { BasePayload, CollectionSlug } from 'payload'
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import type { BasePayload, CollectionSlug } from 'payload'
+
 import { z } from 'zod'
 
 export const baseTools = (server: McpServer, payload: BasePayload) => {
@@ -7,7 +8,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     const collections = Object.keys(payload.collections)
 
     return {
-      content: [{ type: 'text', text: `Collections: ${collections.join(', ')}` }], // TODO: return a list of collections
+      content: [{ type: 'text', text: `Collections: ${collections.join(', ')}` }],
     }
   })
 
@@ -85,16 +86,16 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     'update_document',
     'Update existing document by ID',
     {
+      id: z.string().describe('Document ID to update'),
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      id: z.string().describe('Document ID to update'),
       data: z.record(z.any(), z.any()).describe('Document data to update'),
     },
-    async ({ collection, id, data }) => {
+    async ({ id, collection, data }) => {
       const doc = await payload.update({
-        collection,
         id,
+        collection,
         data,
       })
 
@@ -108,15 +109,15 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     'delete_document',
     'Delete document by ID',
     {
+      id: z.string().describe('Document ID to delete'),
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      id: z.string().describe('Document ID to delete'),
     },
-    async ({ collection, id }) => {
+    async ({ id, collection }) => {
       await payload.delete({
-        collection,
         id,
+        collection,
       })
 
       return {
@@ -132,18 +133,18 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      where: z.record(z.any(), z.any()).optional().describe('Query conditions'),
       limit: z.number().optional().describe('Maximum number of documents to return'),
       page: z.number().optional().describe('Page number for pagination'),
       sort: z.string().optional().describe('Field to sort by'),
+      where: z.record(z.any(), z.any()).optional().describe('Query conditions'),
     },
-    async ({ collection, where, limit, page, sort }) => {
+    async ({ collection, limit, page, sort, where }) => {
       const result = await payload.find({
         collection,
-        where,
         limit,
         page,
         sort,
+        where,
       })
 
       return {
@@ -161,15 +162,15 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     'get_document_by_id',
     'Get single document by ID',
     {
+      id: z.string().describe('Document ID to retrieve'),
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      id: z.string().describe('Document ID to retrieve'),
     },
-    async ({ collection, id }) => {
+    async ({ id, collection }) => {
       const doc = await payload.findByID({
-        collection,
         id,
+        collection,
       })
 
       return {
@@ -182,19 +183,19 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     'duplicate_document',
     'Clone existing document',
     {
+      id: z.string().describe('Document ID to duplicate'),
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      id: z.string().describe('Document ID to duplicate'),
       overrides: z
         .record(z.any(), z.any())
         .optional()
         .describe('Fields to override in the duplicate'),
     },
-    async ({ collection, id, overrides = {} }) => {
+    async ({ id, collection, overrides = {} }) => {
       const originalDoc = await payload.findByID({
-        collection,
         id,
+        collection,
       })
 
       const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...docData } = originalDoc
