@@ -1,0 +1,12 @@
+.changeset/
+.git/
+src/
+./tailwind.config.js
+./tailwind.config.ts
+.swcrc
+.swcrc-build
+.env
+.github
+tsconfig.json
+.tsbuildinfo
+.npmrc
