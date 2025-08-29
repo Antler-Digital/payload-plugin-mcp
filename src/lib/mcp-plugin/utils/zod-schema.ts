@@ -36,8 +36,14 @@ export function buildInputZodShape(
           .int()
           .min(0)
           .max(10)
-          .default(1)
+          .default(0)
           .describe('Depth of population for relationships')
+          .optional(),
+        fields: z
+          .array(z.string())
+          .describe(
+            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          )
           .optional(),
       }
 
@@ -51,8 +57,14 @@ export function buildInputZodShape(
           .int()
           .min(0)
           .max(10)
-          .default(1)
+          .default(0)
           .describe('Depth of population for relationships')
+          .optional(),
+        fields: z
+          .array(z.string())
+          .describe(
+            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          )
           .optional(),
       }
 
@@ -80,8 +92,14 @@ export function buildInputZodShape(
           .int()
           .min(0)
           .max(10)
-          .default(1)
+          .default(0)
           .describe('Depth of population for relationships in response')
+          .optional(),
+        fields: z
+          .array(z.string())
+          .describe(
+            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          )
           .optional(),
       }
 
@@ -111,8 +129,14 @@ export function buildInputZodShape(
           .int()
           .min(0)
           .max(10)
-          .default(1)
+          .default(0)
           .describe('Depth of population for relationships in response')
+          .optional(),
+        fields: z
+          .array(z.string())
+          .describe(
+            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          )
           .optional(),
       }
 
