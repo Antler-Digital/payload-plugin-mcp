@@ -263,7 +263,7 @@ function createListTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_list`,
-    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting`,
+    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
     operation: 'list' as ToolOperation,
     inputSchema: {
@@ -297,12 +297,18 @@ function createListTool(
           description: 'Depth of population for relationships',
           minimum: 0,
           maximum: 10,
-          default: 1,
+          default: 0,
         },
         isDraft: {
           type: 'boolean',
           description:
             "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+        },
+        fields: {
+          type: 'array',
+          description:
+            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          items: { type: 'string' },
         },
       },
     },
@@ -365,7 +371,7 @@ function createGetTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_get`,
-    description: `Get a single document by ID from the ${collectionDescription}`,
+    description: `Get a single document by ID from the ${collectionDescription}. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
     operation: 'get' as ToolOperation,
     inputSchema: {
@@ -380,12 +386,18 @@ function createGetTool(
           description: 'Depth of population for relationships',
           minimum: 0,
           maximum: 10,
-          default: 1,
+          default: 0,
         },
         isDraft: {
           type: 'boolean',
           description:
             "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+        },
+        fields: {
+          type: 'array',
+          description:
+            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          items: { type: 'string' },
         },
       },
       required: ['id'],
@@ -416,7 +428,13 @@ function createCreateTool(
           description: 'Depth of population for relationships in response',
           minimum: 0,
           maximum: 10,
-          default: 1,
+          default: 0,
+        },
+        fields: {
+          type: 'array',
+          description:
+            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          items: { type: 'string' },
         },
       },
       required: ['data'],
@@ -451,7 +469,13 @@ function createUpdateTool(
           description: 'Depth of population for relationships in response',
           minimum: 0,
           maximum: 10,
-          default: 1,
+          default: 0,
+        },
+        fields: {
+          type: 'array',
+          description:
+            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+          items: { type: 'string' },
         },
       },
       required: ['id', 'data'],
@@ -823,17 +847,19 @@ export async function executeTool(
           limit: input.limit || 10,
           page: input.page || 1,
           sort: input.sort,
-          depth: input.depth || 1,
+          depth: input.depth ?? 0,
           draft: input.isDraft,
           req: mockReq, // Pass mock request to trigger read hooks
         })
-        return await attachMarkdownFromLexicalInResult(
+        const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
           true,
         )
+        const projected = applyProjectionToListResult(withMd, input.fields, !analysis.isGlobal)
+        return projected
       })()
 
     case 'get':
@@ -847,24 +873,26 @@ export async function executeTool(
         const result = analysis.isGlobal
           ? await (payload as any).findGlobal({
               slug: String(collection),
-              depth: input.depth || 1,
+              depth: input.depth ?? 0,
               draft: input.isDraft,
               req: mockReq, // Pass mock request for global operations too
             })
           : await payload.findByID({
               collection: collection as CollectionSlug,
               id: input.id,
-              depth: input.depth || 1,
+              depth: input.depth ?? 0,
               draft: input.isDraft,
               req: mockReq, // Pass mock request to trigger read hooks
             })
-        return await attachMarkdownFromLexicalInResult(
+        const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
           false,
         )
+        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
+        return projected
       })()
 
     case 'create':
@@ -887,17 +915,18 @@ export async function executeTool(
         const result = await payload.create({
           collection: collection as CollectionSlug,
           data: processedData,
-          depth: input.depth || 1,
+          depth: input.depth ?? 0,
           req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
         })
-        const finalResult = await attachMarkdownFromLexicalInResult(
+        const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
           false,
         )
-        return finalResult
+        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
+        return projected
       })()
 
     case 'update':
@@ -923,24 +952,25 @@ export async function executeTool(
           ? await (payload as any).updateGlobal({
               slug: String(collection),
               data: processedData,
-              depth: input.depth || 1,
+              depth: input.depth ?? 0,
               req: mockReq, // CRITICAL: Pass mock request for global updates
             })
           : await payload.update({
               collection: collection as CollectionSlug,
               id: input.id,
               data: processedData,
-              depth: input.depth || 1,
+              depth: input.depth ?? 0,
               req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
             })
-        const finalResult = await attachMarkdownFromLexicalInResult(
+        const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
           false,
         )
-        return finalResult
+        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
+        return projected
       })()
 
     case 'delete':
@@ -964,5 +994,59 @@ export async function executeTool(
 
     default:
       throw new Error(`Unknown operation: ${operation}`)
+  }
+}
+
+function getValueAtPath(obj: any, path: string): any {
+  const parts = path.split('.')
+  let current = obj
+  for (const part of parts) {
+    if (current == null || typeof current !== 'object') return undefined
+    current = current[part]
+  }
+  return current
+}
+
+function setValueAtPath(obj: any, path: string, value: any): void {
+  const parts = path.split('.')
+  let current = obj
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i]
+    if (current[part] == null || typeof current[part] !== 'object') {
+      current[part] = {}
+    }
+    current = current[part]
+  }
+  current[parts[parts.length - 1]] = value
+}
+
+function projectDoc(doc: any, fields?: string[] | null, includeId: boolean = true): any {
+  if (!fields || fields.length === 0) return doc
+  const projected: any = {}
+  if (includeId && doc && typeof doc === 'object' && 'id' in doc) {
+    projected.id = doc.id
+  }
+  for (const path of fields) {
+    if (typeof path !== 'string' || path.trim() === '') continue
+    const value = getValueAtPath(doc, path)
+    if (value !== undefined) setValueAtPath(projected, path, value)
+  }
+  return projected
+}
+
+function applyProjectionToDoc(doc: any, fields?: string[] | null, isCollection: boolean = true) {
+  if (!fields || fields.length === 0) return doc
+  return projectDoc(doc, fields, isCollection)
+}
+
+function applyProjectionToListResult(
+  result: any,
+  fields?: string[] | null,
+  isCollection: boolean = true,
+) {
+  if (!fields || fields.length === 0 || !result || !Array.isArray(result.docs)) return result
+  return {
+    ...result,
+    docs: result.docs.map((d: any) => projectDoc(d, fields, isCollection)),
   }
 }
