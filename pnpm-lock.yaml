@@ -12,31 +12,22 @@ importers:
 
   .:
     dependencies:
-      '@changesets/cli':
-        specifier: ^2.29.6
-        version: 2.29.6(@types/node@22.18.1)
-      '@fastify/cors':
-        specifier: ^10.1.0
-        version: 10.1.0
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.17.5
-        version: 1.17.5
-      json-schema:
-        specifier: ^0.4.0
-        version: 0.4.0
       mcp-handler:
         specifier: ^1.0.2
         version: 1.0.2(@modelcontextprotocol/sdk@1.17.5)(next@15.5.0(@playwright/test@1.55.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.77.4))
-      ts-json-schema-generator:
-        specifier: ^2.4.0
-        version: 2.4.0
       zod:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@changesets/cli':
+        specifier: ^2.29.6
+        version: 2.29.6(@types/node@22.18.1)
       '@eslint/eslintrc':
         specifier: ^3.3.1
         version: 3.3.1
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.17.5
+        version: 1.17.5
       '@payloadcms/db-mongodb':
         specifier: latest
         version: 3.54.0(payload@3.54.0(graphql@16.11.0)(typescript@5.7.3))
@@ -139,6 +130,9 @@ importers:
       sort-package-json:
         specifier: ^2.15.1
         version: 2.15.1
+      ts-json-schema-generator:
+        specifier: ^2.4.0
+        version: 2.4.0
       tsx:
         specifier: ^4.20.5
         version: 4.20.5
@@ -726,9 +720,6 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  '@fastify/cors@10.1.0':
-    resolution: {integrity: sha512-MZyBCBJtII60CU9Xme/iE4aEy8G7QpzGR8zkdXZkDFt7ElEMachbE61tfhAG/bvSaULlqlf0huMT12T7iqEmdQ==}
 
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
@@ -3431,9 +3422,6 @@ packages:
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
 
-  fastify-plugin@5.0.1:
-    resolution: {integrity: sha512-HCxs+YnRaWzCl+cWRYFnHmeRFyR5GVnJTAaCJQiYzQSDwK9MgJdyAsuL3nh0EWRCYMgQ5MeziymvmAhUHYHDUQ==}
-
   fastq@1.19.1:
     resolution: {integrity: sha512-GwLTyxkCXjXbxqIhTsMI2Nui8huMPtnxg7krajPJAjnEG/iiOS7i+zCtWGZR9G0NBKbXKh6X9m9UIsYX/N6vvQ==}
 
@@ -4088,9 +4076,6 @@ packages:
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
 
-  json-schema@0.4.0:
-    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
-
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
@@ -4395,9 +4380,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  mnemonist@0.40.0:
-    resolution: {integrity: sha512-kdd8AFNig2AD5Rkih7EPCXhu/iMvwevQFX/uEiGhZyPZi7fHqOoF4V4kHLpCfysxXMgQ4B52kdPMCwARshKvEg==}
-
   monaco-editor@0.52.2:
     resolution: {integrity: sha512-GEQWEZmfkOGLdd3XK8ryrfWz3AIP8YymVXiPHEdewrUq7mh0qrKrfHLNCXcbB6sTnMLnOZ3ztSiKcciFUkIJwQ==}
 
@@ -4604,9 +4586,6 @@ packages:
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
-
-  obliterator@2.0.5:
-    resolution: {integrity: sha512-42CPE9AhahZRsMNslczq0ctAEtqk8Eka26QofnqC346BZdHDySk3LWka23LI7ULIw11NmltpiLagIq8gBozxTw==}
 
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
@@ -6778,11 +6757,6 @@ snapshots:
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-
-  '@fastify/cors@10.1.0':
-    dependencies:
-      fastify-plugin: 5.0.1
-      mnemonist: 0.40.0
 
   '@floating-ui/core@1.7.3':
     dependencies:
@@ -10021,8 +9995,6 @@ snapshots:
 
   fast-uri@3.1.0: {}
 
-  fastify-plugin@5.0.1: {}
-
   fastq@1.19.1:
     dependencies:
       reusify: 1.1.0
@@ -10684,8 +10656,6 @@ snapshots:
 
   json-schema-traverse@1.0.0: {}
 
-  json-schema@0.4.0: {}
-
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   json5@1.0.2:
@@ -11103,10 +11073,6 @@ snapshots:
 
   mkdirp@1.0.4: {}
 
-  mnemonist@0.40.0:
-    dependencies:
-      obliterator: 2.0.5
-
   monaco-editor@0.52.2: {}
 
   mongodb-connection-string-url@3.0.2:
@@ -11310,8 +11276,6 @@ snapshots:
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
-
-  obliterator@2.0.5: {}
 
   obuf@1.1.2: {}
 
