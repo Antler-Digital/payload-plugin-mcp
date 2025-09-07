@@ -39,6 +39,7 @@ export default [
       '@typescript-eslint/require-await': 'off', // Allow async functions without await
       '@typescript-eslint/await-thenable': 'off', // Allow await on non-promises
       'perfectionist/sort-objects': 'off', // Disable object sorting
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off', // Allow type assertions for compatibility
     },
   },
   {

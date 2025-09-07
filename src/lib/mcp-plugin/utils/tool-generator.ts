@@ -153,7 +153,7 @@ export function analyzeCollection(
   analyzeFields(fields)
 
   return {
-    slug: collection.slug,
+    slug: collection.slug as CollectionSlug,
     fields: fieldAnalyses,
     hasAuth: Boolean(collection.auth),
     hasUpload: Boolean(collection.upload),
@@ -825,7 +825,7 @@ export async function executeTool(
          * Performance impact depends on hook complexity but typically adds 10-50ms total.
          */
         const result = await payload.create({
-          collection,
+          collection: collection as CollectionSlug,
           data: processedData,
           depth: input.depth || 1,
           req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
@@ -853,7 +853,7 @@ export async function executeTool(
          */
         const deleted = await payload.delete({
           id: input.id,
-          collection,
+          collection: collection as CollectionSlug,
           req: mockReq, // CRITICAL: Pass mock request to trigger afterDelete hooks
         })
         return deleted
@@ -876,7 +876,7 @@ export async function executeTool(
             })
           : await payload.findByID({
               id: input.id,
-              collection,
+              collection: collection as CollectionSlug,
               depth: input.depth || 1,
               draft: input.isDraft,
               req: mockReq, // Pass mock request to trigger read hooks
@@ -900,7 +900,7 @@ export async function executeTool(
          * These are generally lightweight and add minimal overhead.
          */
         const result = await payload.find({
-          collection,
+          collection: collection as CollectionSlug,
           depth: input.depth || 1,
           draft: input.isDraft,
           limit: input.limit || 10,
@@ -946,7 +946,7 @@ export async function executeTool(
             })
           : await payload.update({
               id: input.id,
-              collection,
+              collection: collection as CollectionSlug,
               data: processedData,
               depth: input.depth || 1,
               req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
