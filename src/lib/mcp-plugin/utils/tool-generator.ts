@@ -267,13 +267,12 @@ function createListTool(
     name: `${toolPrefix}_list`,
     description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
-    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting`,
     inputSchema: {
       type: 'object',
       properties: {
         depth: {
           type: 'number',
-          default: 1,
+          default: 0,
           description: 'Depth of population for relationships',
           maximum: 10,
           minimum: 0,
@@ -300,18 +299,6 @@ function createListTool(
           type: 'string',
           description: 'Sort field name (prefix with - for descending)',
           examples: ['createdAt', '-updatedAt', 'title'],
-        },
-        depth: {
-          type: 'number',
-          description: 'Depth of population for relationships',
-          minimum: 0,
-          maximum: 10,
-          default: 0,
-        },
-        isDraft: {
-          type: 'boolean',
-          description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
         },
         fields: {
           type: 'array',
@@ -383,7 +370,6 @@ function createGetTool(
     name: `${toolPrefix}_get`,
     description: `Get a single document by ID from the ${collectionDescription}. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
-    description: `Get a single document by ID from the ${collectionDescription}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -393,11 +379,10 @@ function createGetTool(
         },
         depth: {
           type: 'number',
-          default: 1,
+          default: 0,
           description: 'Depth of population for relationships',
           maximum: 10,
           minimum: 0,
-          default: 0,
         },
         isDraft: {
           type: 'boolean',
@@ -436,11 +421,10 @@ function createCreateTool(
         data: createInputDataSchema(analysis),
         depth: {
           type: 'number',
-          default: 1,
+          default: 0,
           description: 'Depth of population for relationships in response',
           maximum: 10,
           minimum: 0,
-          default: 0,
         },
         fields: {
           type: 'array',
@@ -478,11 +462,10 @@ function createUpdateTool(
         data: createInputDataSchema(analysis, false), // Not all fields required for updates
         depth: {
           type: 'number',
-          default: 1,
+          default: 0,
           description: 'Depth of population for relationships in response',
           maximum: 10,
           minimum: 0,
-          default: 0,
         },
         fields: {
           type: 'array',
@@ -862,13 +845,9 @@ export async function executeTool(
          */
         const result = await payload.create({
           collection: collection as CollectionSlug,
-          where: input.where || {},
-          limit: input.limit || 10,
-          page: input.page || 1,
-          sort: input.sort,
+          data: processedData,
           depth: input.depth ?? 0,
-          draft: input.isDraft,
-          req: mockReq, // Pass mock request to trigger read hooks
+          req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
         })
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
@@ -877,7 +856,7 @@ export async function executeTool(
           mcpOptions?.richText,
           false,
         )
-        return finalResult
+        return withMd
       })()
 
     case 'delete':
@@ -916,6 +895,7 @@ export async function executeTool(
             })
           : await payload.findByID({
               id: input.id,
+              collection: collection as CollectionSlug,
               depth: input.depth ?? 0,
               draft: input.isDraft,
               req: mockReq, // Pass mock request to trigger read hooks
@@ -942,10 +922,15 @@ export async function executeTool(
          */
         const result = await payload.find({
           collection: collection as CollectionSlug,
-          data: processedData,
           depth: input.depth ?? 0,
-          req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
+          draft: input.isDraft,
+          limit: input.limit || 10,
+          page: input.page || 1,
+          sort: input.sort,
+          where: input.where || {},
+          req: mockReq, // Pass mock request to trigger read hooks
         })
+        
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
