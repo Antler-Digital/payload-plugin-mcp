@@ -106,9 +106,9 @@ You should receive a response with information about available tools and the ser
 
 ## Next Steps
 
-- [Configure collections](/guide/configuration) for more advanced setups
-- [Set up Claude Desktop integration](/guide/claude-integration)
-- [Deploy to production](/guide/deployment)
+- Configure collections for more advanced setups (see README.md)
+- Set up Claude Desktop integration (see README.md)
+- Deploy to production (see examples/vercel/)
 
 ::: warning Important
 Never commit your API key to version control. Always use environment variables for sensitive configuration.

@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 export type McpAuthContext = {
+  scopes: string[]
   tokenId?: string
   userId?: string
   userRole?: string
-  scopes: string[]
 }
 
 const storage = new AsyncLocalStorage<McpAuthContext>()

@@ -1,39 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { CollectionConfig, GlobalConfig } from 'payload'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import type { CollectionMcpConfig, GlobalMcpConfig } from '../../types/index.js'
+
 import {
+  defaultOperations,
   getCollectionsToExpose,
   getGlobalsToExpose,
-  defaultOperations,
 } from '../get-collections-to-expose.js'
-import type { CollectionConfig, GlobalConfig } from 'payload'
-import type { CollectionMcpConfig, GlobalMcpConfig } from '../../types/index.js'
 
 // Mock the analyzeCollection function
 vi.mock('../tool-generator', () => ({
   analyzeCollection: vi.fn((collection, options) => ({
     slug: collection.slug,
-    operations: options.operations,
     fields: [],
     isGlobal: false,
+    operations: options.operations,
   })),
 }))
 
 describe('get-collections-to-expose', () => {
   const mockCollection: CollectionConfig = {
     slug: 'posts',
-    fields: [],
     admin: {},
+    fields: [],
   } as CollectionConfig
 
   const mockGlobal: GlobalConfig = {
     slug: 'settings',
-    fields: [],
     admin: {},
+    fields: [],
   } as GlobalConfig
 
   const mockMcpTokensCollection: CollectionConfig = {
     slug: 'mcp-tokens',
-    fields: [{ type: 'text', name: 'tokenHash' } as any],
     admin: {},
+    fields: [{ name: 'tokenHash', type: 'text' } as any],
   } as CollectionConfig
 
   beforeEach(() => {
@@ -43,11 +46,11 @@ describe('get-collections-to-expose', () => {
   describe('defaultOperations', () => {
     it('should have correct default operation values', () => {
       expect(defaultOperations).toEqual({
-        list: true,
-        get: true,
         create: false,
-        update: false,
         delete: false,
+        get: true,
+        list: true,
+        update: false,
       })
     })
   })
@@ -74,7 +77,7 @@ describe('get-collections-to-expose', () => {
       const collectionWithTokenHash = {
         ...mockCollection,
         slug: 'auth',
-        fields: [{ type: 'text', name: 'tokenHash' } as any],
+        fields: [{ name: 'tokenHash', type: 'text' } as any],
       }
       const allCollections = [mockCollection, collectionWithTokenHash]
       const result = getCollectionsToExpose(allCollections, 'all', defaultOperations)
@@ -97,7 +100,7 @@ describe('get-collections-to-expose', () => {
         {
           collection: mockCollection,
           options: {
-            operations: { list: false, get: true },
+            operations: { get: true, list: false },
             toolPrefix: 'custom',
           },
         },
@@ -178,11 +181,11 @@ describe('get-collections-to-expose', () => {
       // Globals should only support get/update operations
       // @ts-ignore
       expect(result[0].operations).toEqual({
-        list: false,
-        get: true,
         create: false,
-        update: true,
         delete: false,
+        get: true,
+        list: false,
+        update: true,
       })
     })
 

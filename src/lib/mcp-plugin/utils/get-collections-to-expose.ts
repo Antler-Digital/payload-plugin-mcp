@@ -1,24 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CollectionConfig, GlobalConfig } from 'payload'
-import { analyzeCollection } from './tool-generator.js'
+
 import type {
-  CollectionMcpConfig,
-  ToolOperations,
   CollectionAnalysis,
+  CollectionMcpConfig,
   GlobalMcpConfig,
+  ToolOperations,
 } from '../types/index.js'
 
+import { analyzeCollection } from './tool-generator.js'
+
 export const defaultOperations: ToolOperations = {
-  list: true,
-  get: true,
   create: false,
-  update: false,
   delete: false,
+  get: true,
+  list: true,
+  update: false,
 }
 
 export function getCollectionsToExpose(
   allCollections: CollectionConfig[],
-  collectionsOption: CollectionMcpConfig[] | 'all',
+  collectionsOption: 'all' | CollectionMcpConfig[],
   defaultOperations: ToolOperations,
 ): CollectionAnalysis[] {
   if (collectionsOption === 'all') {
@@ -53,7 +55,7 @@ export function getCollectionsToExpose(
       }
     } else {
       // Direct CollectionConfig
-      collection = configItem as CollectionConfig
+      collection = configItem
       mcpOptions = {
         operations: defaultOperations,
       }
@@ -84,16 +86,16 @@ export function getCollectionsToExpose(
 
 export function getGlobalsToExpose(
   allGlobals: GlobalConfig[],
-  globalsOption: GlobalMcpConfig[] | 'all',
+  globalsOption: 'all' | GlobalMcpConfig[],
   defaultOperations: ToolOperations,
 ): CollectionAnalysis[] {
   // Globals only support get/update operations
   const globalOps = {
     ...defaultOperations,
-    list: false,
     create: false,
     delete: false,
     get: true,
+    list: false,
     update: true,
   }
 
@@ -119,7 +121,7 @@ export function getGlobalsToExpose(
         ...configItem.options,
       }
     } else {
-      global = configItem as GlobalConfig
+      global = configItem
       mcpOptions = {
         operations: globalOps,
       }

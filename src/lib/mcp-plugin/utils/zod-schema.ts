@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z, type ZodRawShape } from 'zod'
+
 import type { CollectionAnalysis, FieldAnalysis, ToolOperation } from '../types/index.js'
 
 /**
@@ -11,53 +12,8 @@ export function buildInputZodShape(
   operation: ToolOperation,
 ): ZodRawShape {
   switch (operation) {
-    case 'list':
-      if (analysis.isGlobal) return {}
-      return {
-        where: z.any().describe('Query conditions for filtering documents').optional(),
-        limit: z
-          .number()
-          .int()
-          .min(1)
-          .max(100)
-          .default(10)
-          .describe('Maximum number of documents to return')
-          .optional(),
-        page: z
-          .number()
-          .int()
-          .min(1)
-          .default(1)
-          .describe('Page number for pagination (1-based)')
-          .optional(),
-        sort: z.string().describe('Sort field name (prefix with - for descending)').optional(),
-        depth: z
-          .number()
-          .int()
-          .min(0)
-          .max(10)
-          .default(1)
-          .describe('Depth of population for relationships')
-          .optional(),
-      }
-
-    case 'get':
-      return {
-        ...(analysis.isGlobal
-          ? {}
-          : { id: z.string().describe('The ID of the document to retrieve') }),
-        depth: z
-          .number()
-          .int()
-          .min(0)
-          .max(10)
-          .default(1)
-          .describe('Depth of population for relationships')
-          .optional(),
-      }
-
     case 'create':
-      if (analysis.isGlobal) return {}
+      if (analysis.isGlobal) {return {}}
       return {
         data: z
           .preprocess(
@@ -83,6 +39,57 @@ export function buildInputZodShape(
           .default(1)
           .describe('Depth of population for relationships in response')
           .optional(),
+      }
+
+    case 'delete':
+      if (analysis.isGlobal) {return {}}
+      return {
+        id: z.string().describe('The ID of the document to delete'),
+      }
+
+    case 'get':
+      return {
+        ...(analysis.isGlobal
+          ? {}
+          : { id: z.string().describe('The ID of the document to retrieve') }),
+        depth: z
+          .number()
+          .int()
+          .min(0)
+          .max(10)
+          .default(1)
+          .describe('Depth of population for relationships')
+          .optional(),
+      }
+
+    case 'list':
+      if (analysis.isGlobal) {return {}}
+      return {
+        depth: z
+          .number()
+          .int()
+          .min(0)
+          .max(10)
+          .default(1)
+          .describe('Depth of population for relationships')
+          .optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe('Maximum number of documents to return')
+          .optional(),
+        page: z
+          .number()
+          .int()
+          .min(1)
+          .default(1)
+          .describe('Page number for pagination (1-based)')
+          .optional(),
+        sort: z.string().describe('Sort field name (prefix with - for descending)').optional(),
+        where: z.any().describe('Query conditions for filtering documents').optional(),
       }
 
     case 'update':
@@ -114,12 +121,6 @@ export function buildInputZodShape(
           .default(1)
           .describe('Depth of population for relationships in response')
           .optional(),
-      }
-
-    case 'delete':
-      if (analysis.isGlobal) return {}
-      return {
-        id: z.string().describe('The ID of the document to delete'),
       }
 
     default:
@@ -173,15 +174,27 @@ function buildDataZodObjectShape(
  */
 function fieldAnalysisToZod(field: FieldAnalysis) {
   switch (field.type) {
-    case 'text':
-    case 'textarea':
+    case 'array':
+    case 'blocks': {
+      let a = z.array(z.record(z.string(), z.any()))
+      if (field.arrayConstraints) {
+        const { maxItems, minItems } = field.arrayConstraints
+        if (typeof minItems === 'number') {a = a.min(minItems)}
+        if (typeof maxItems === 'number') {a = a.max(maxItems)}
+      }
+      return a.describe(field.description ?? 'Array of objects')
+    }
+    case 'checkbox':
+      return field.description ? z.boolean().describe(field.description) : z.boolean()
     case 'code':
-    case 'email': {
+    case 'email':
+    case 'text':
+    case 'textarea': {
       let s = z.string()
       if (field.stringConstraints) {
-        const { minLength, maxLength, pattern } = field.stringConstraints
-        if (typeof minLength === 'number') s = s.min(minLength)
-        if (typeof maxLength === 'number') s = s.max(maxLength)
+        const { maxLength, minLength, pattern } = field.stringConstraints
+        if (typeof minLength === 'number') {s = s.min(minLength)}
+        if (typeof maxLength === 'number') {s = s.max(maxLength)}
         if (pattern) {
           try {
             s = s.regex(new RegExp(pattern))
@@ -192,22 +205,28 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
       }
       return field.description ? s.describe(field.description) : s
     }
+    case 'date':
+      return z.string().describe(field.description ?? 'ISO date-time string')
+    case 'group':
+      return z.record(z.string(), z.any()).describe(field.description ?? 'Object')
+    case 'json':
+      return z.record(z.string(), z.any()).describe(field.description ?? 'Arbitrary JSON object')
     case 'number': {
       let n = z.number()
       if (field.numberConstraints) {
-        const { min, max, integer } = field.numberConstraints
-        if (typeof min === 'number') n = n.min(min)
-        if (typeof max === 'number') n = n.max(max)
-        if (integer) n = n.int()
+        const { integer, max, min } = field.numberConstraints
+        if (typeof min === 'number') {n = n.min(min)}
+        if (typeof max === 'number') {n = n.max(max)}
+        if (integer) {n = n.int()}
       }
       return field.description ? n.describe(field.description) : n
     }
-    case 'checkbox':
-      return field.description ? z.boolean().describe(field.description) : z.boolean()
-    case 'date':
-      return z.string().describe(field.description ?? 'ISO date-time string')
-    case 'select':
+    case 'point':
+      return z
+        .tuple([z.number(), z.number()])
+        .describe(field.description ?? 'Tuple [longitude, latitude]')
     case 'radio':
+    case 'select':
       if (field.options && Array.isArray(field.options) && field.options.length > 0) {
         const values = field.options.map((opt: any) =>
           typeof opt === 'string' ? opt : opt.value || opt.label,
@@ -220,10 +239,6 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
       return z
         .union([z.string(), z.record(z.string(), z.any())])
         .describe(field.description ?? 'Document ID or populated document')
-    case 'upload':
-      return z
-        .union([z.string(), z.record(z.string(), z.any())])
-        .describe(field.description ?? 'File ID or file document')
     case 'richText':
       return z
         .string()
@@ -231,24 +246,10 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
           field.description ??
             'Rich text content (Markdown string). Example: "# Heading\\n\\nSome **bold** text"',
         )
-    case 'json':
-      return z.record(z.string(), z.any()).describe(field.description ?? 'Arbitrary JSON object')
-    case 'array':
-    case 'blocks': {
-      let a = z.array(z.record(z.string(), z.any()))
-      if (field.arrayConstraints) {
-        const { minItems, maxItems } = field.arrayConstraints
-        if (typeof minItems === 'number') a = a.min(minItems)
-        if (typeof maxItems === 'number') a = a.max(maxItems)
-      }
-      return a.describe(field.description ?? 'Array of objects')
-    }
-    case 'group':
-      return z.record(z.string(), z.any()).describe(field.description ?? 'Object')
-    case 'point':
+    case 'upload':
       return z
-        .tuple([z.number(), z.number()])
-        .describe(field.description ?? 'Tuple [longitude, latitude]')
+        .union([z.string(), z.record(z.string(), z.any())])
+        .describe(field.description ?? 'File ID or file document')
     default:
       return z.any().describe(field.description ?? 'Any')
   }

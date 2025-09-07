@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BasePayload, CollectionConfig, CollectionSlug, Field } from 'payload'
-import { getAuthContext } from '../auth-context.js'
+
 import type {
-  ToolDescriptor,
-  FieldAnalysis,
   CollectionAnalysis,
-  ToolOperation,
-  JSONSchema7,
   CollectionMcpOptions,
+  FieldAnalysis,
+  JSONSchema7,
+  ToolDescriptor,
+  ToolOperation,
 } from '../types/index.js'
+
+import { getAuthContext } from '../auth-context.js'
 import {
   attachMarkdownFromLexicalInResult,
   convertMarkdownFieldsToLexicalForData,
@@ -35,11 +37,11 @@ export function generateToolDescriptors(
     const completeAnalysis =
       analysis.fields.length > 0 ? analysis : completeCollectionAnalysis(analysis)
     const operations = completeAnalysis.mcpOptions?.operations || {
-      list: true,
-      get: true,
       create: false,
-      update: false,
       delete: false,
+      get: true,
+      list: true,
+      update: false,
     }
 
     const toolPrefix = completeAnalysis.mcpOptions?.toolPrefix || completeAnalysis.slug
@@ -151,12 +153,12 @@ export function analyzeCollection(
   analyzeFields(fields)
 
   return {
-    slug: collection.slug as CollectionSlug,
+    slug: collection.slug,
     fields: fieldAnalyses,
-    hasUpload: Boolean(collection.upload),
     hasAuth: Boolean(collection.auth),
-    timestamps: collection.timestamps !== false,
+    hasUpload: Boolean(collection.upload),
     mcpOptions,
+    timestamps: collection.timestamps !== false,
   }
 }
 
@@ -183,10 +185,10 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
   const base: FieldAnalysis = {
     name: fieldName,
     type: field.type,
-    required: isRequired,
-    hasDefault: 'defaultValue' in field && field.defaultValue !== undefined,
     description,
+    hasDefault: 'defaultValue' in field && field.defaultValue !== undefined,
     options: field.type === 'select' && 'options' in field ? (field as any).options : undefined,
+    required: isRequired,
     validation: 'validate' in field ? (field as any).validate : undefined,
   }
 
@@ -237,7 +239,7 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
   if (field.type === 'relationship') {
     const relationTo = (field as any).relationTo
     const hasMany = Boolean((field as any).hasMany)
-    base.relationship = { relationTo, hasMany }
+    base.relationship = { hasMany, relationTo }
   }
 
   // Upload constraints
@@ -263,49 +265,49 @@ function createListTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_list`,
-    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting`,
     collection: analysis.slug,
-    operation: 'list' as ToolOperation,
+    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting`,
     inputSchema: {
       type: 'object',
       properties: {
-        where: {
-          type: 'object',
-          description: 'Query conditions for filtering documents',
-          additionalProperties: true,
-        },
-        limit: {
-          type: 'number',
-          description: 'Maximum number of documents to return',
-          minimum: 1,
-          maximum: 100,
-          default: 10,
-        },
-        page: {
-          type: 'number',
-          description: 'Page number for pagination (1-based)',
-          minimum: 1,
-          default: 1,
-        },
-        sort: {
-          type: 'string',
-          description: 'Sort field name (prefix with - for descending)',
-          examples: ['createdAt', '-updatedAt', 'title'],
-        },
         depth: {
           type: 'number',
-          description: 'Depth of population for relationships',
-          minimum: 0,
-          maximum: 10,
           default: 1,
+          description: 'Depth of population for relationships',
+          maximum: 10,
+          minimum: 0,
         },
         isDraft: {
           type: 'boolean',
           description:
             "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
         },
+        limit: {
+          type: 'number',
+          default: 10,
+          description: 'Maximum number of documents to return',
+          maximum: 100,
+          minimum: 1,
+        },
+        page: {
+          type: 'number',
+          default: 1,
+          description: 'Page number for pagination (1-based)',
+          minimum: 1,
+        },
+        sort: {
+          type: 'string',
+          description: 'Sort field name (prefix with - for descending)',
+          examples: ['createdAt', '-updatedAt', 'title'],
+        },
+        where: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Query conditions for filtering documents',
+        },
       },
     },
+    operation: 'list' as ToolOperation,
     outputSchema: {
       type: 'object',
       properties: {
@@ -313,17 +315,21 @@ function createListTool(
           type: 'array',
           items: createDocumentSchema(analysis),
         },
-        totalDocs: {
-          type: 'number',
-          description: 'Total number of documents matching the query',
+        hasNextPage: {
+          type: 'boolean',
+          description: 'Whether there is a next page',
+        },
+        hasPrevPage: {
+          type: 'boolean',
+          description: 'Whether there is a previous page',
         },
         limit: {
           type: 'number',
           description: 'Limit used for this query',
         },
-        totalPages: {
-          type: 'number',
-          description: 'Total number of pages',
+        nextPage: {
+          type: ['number', 'null'],
+          description: 'Next page number or null',
         },
         page: {
           type: 'number',
@@ -333,21 +339,17 @@ function createListTool(
           type: 'number',
           description: 'Paging counter',
         },
-        hasPrevPage: {
-          type: 'boolean',
-          description: 'Whether there is a previous page',
-        },
-        hasNextPage: {
-          type: 'boolean',
-          description: 'Whether there is a next page',
-        },
         prevPage: {
           type: ['number', 'null'],
           description: 'Previous page number or null',
         },
-        nextPage: {
-          type: ['number', 'null'],
-          description: 'Next page number or null',
+        totalDocs: {
+          type: 'number',
+          description: 'Total number of documents matching the query',
+        },
+        totalPages: {
+          type: 'number',
+          description: 'Total number of pages',
         },
       },
       required: ['docs', 'totalDocs', 'limit', 'totalPages', 'page'],
@@ -365,9 +367,8 @@ function createGetTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_get`,
-    description: `Get a single document by ID from the ${collectionDescription}`,
     collection: analysis.slug,
-    operation: 'get' as ToolOperation,
+    description: `Get a single document by ID from the ${collectionDescription}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -377,10 +378,10 @@ function createGetTool(
         },
         depth: {
           type: 'number',
-          description: 'Depth of population for relationships',
-          minimum: 0,
-          maximum: 10,
           default: 1,
+          description: 'Depth of population for relationships',
+          maximum: 10,
+          minimum: 0,
         },
         isDraft: {
           type: 'boolean',
@@ -390,6 +391,7 @@ function createGetTool(
       },
       required: ['id'],
     },
+    operation: 'get' as ToolOperation,
     outputSchema: createDocumentSchema(analysis),
   }
 }
@@ -404,23 +406,23 @@ function createCreateTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_create`,
-    description: `Create a new document in the ${collectionDescription}`,
     collection: analysis.slug,
-    operation: 'create' as ToolOperation,
+    description: `Create a new document in the ${collectionDescription}`,
     inputSchema: {
       type: 'object',
       properties: {
         data: createInputDataSchema(analysis),
         depth: {
           type: 'number',
-          description: 'Depth of population for relationships in response',
-          minimum: 0,
-          maximum: 10,
           default: 1,
+          description: 'Depth of population for relationships in response',
+          maximum: 10,
+          minimum: 0,
         },
       },
       required: ['data'],
     },
+    operation: 'create' as ToolOperation,
     outputSchema: createDocumentSchema(analysis),
   }
 }
@@ -435,9 +437,8 @@ function createUpdateTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_update`,
-    description: `Update an existing document in the ${collectionDescription}`,
     collection: analysis.slug,
-    operation: 'update' as ToolOperation,
+    description: `Update an existing document in the ${collectionDescription}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -448,14 +449,15 @@ function createUpdateTool(
         data: createInputDataSchema(analysis, false), // Not all fields required for updates
         depth: {
           type: 'number',
-          description: 'Depth of population for relationships in response',
-          minimum: 0,
-          maximum: 10,
           default: 1,
+          description: 'Depth of population for relationships in response',
+          maximum: 10,
+          minimum: 0,
         },
       },
       required: ['id', 'data'],
     },
+    operation: 'update' as ToolOperation,
     outputSchema: createDocumentSchema(analysis),
   }
 }
@@ -470,9 +472,8 @@ function createDeleteTool(
 ): ToolDescriptor {
   return {
     name: `${toolPrefix}_delete`,
-    description: `Delete a document from the ${collectionDescription}`,
     collection: analysis.slug,
-    operation: 'delete' as ToolOperation,
+    description: `Delete a document from the ${collectionDescription}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -483,6 +484,7 @@ function createDeleteTool(
       },
       required: ['id'],
     },
+    operation: 'delete' as ToolOperation,
     outputSchema: createDocumentSchema(analysis),
   }
 }
@@ -511,13 +513,13 @@ function createDocumentSchema(analysis: CollectionAnalysis): JSONSchema7 {
   if (analysis.timestamps) {
     properties.createdAt = {
       type: 'string',
-      format: 'date-time',
       description: 'Document creation timestamp',
+      format: 'date-time',
     }
     properties.updatedAt = {
       type: 'string',
-      format: 'date-time',
       description: 'Document last update timestamp',
+      format: 'date-time',
     }
   }
 
@@ -569,34 +571,37 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
 
   // Map PayloadCMS field types to JSON Schema types
   switch (field.type) {
-    case 'text':
-    case 'textarea':
+    case 'array':
+      schema.type = 'array'
+      schema.items = { type: 'object', additionalProperties: true }
+      if (field.arrayConstraints) {
+        const { maxItems, minItems } = field.arrayConstraints
+        if (typeof minItems === 'number') {schema.minItems = minItems}
+        if (typeof maxItems === 'number') {schema.maxItems = maxItems}
+      }
+      break
+    case 'blocks':
+      schema.type = 'array'
+      schema.items = { type: 'object', additionalProperties: true }
+      break
+    case 'checkbox':
+      schema.type = 'boolean'
+      break
     case 'code':
     case 'email':
+    case 'text':
+    case 'textarea':
       schema.type = 'string'
       if (field.type === 'email') {
         schema.format = 'email'
       }
       if (field.stringConstraints) {
-        const { minLength, maxLength, pattern, format } = field.stringConstraints
-        if (typeof minLength === 'number') schema.minimum = minLength as any
-        if (typeof maxLength === 'number') schema.maximum = maxLength as any
-        if (pattern) schema.pattern = pattern as any
-        if (format) schema.format = format
+        const { format, maxLength, minLength, pattern } = field.stringConstraints
+        if (typeof minLength === 'number') {schema.minimum = minLength as any}
+        if (typeof maxLength === 'number') {schema.maximum = maxLength as any}
+        if (pattern) {schema.pattern = pattern as any}
+        if (format) {schema.format = format}
       }
-      break
-
-    case 'number':
-      schema.type = 'number'
-      if (field.numberConstraints) {
-        const { min, max } = field.numberConstraints
-        if (typeof min === 'number') schema.minimum = min
-        if (typeof max === 'number') schema.maximum = max
-      }
-      break
-
-    case 'checkbox':
-      schema.type = 'boolean'
       break
 
     case 'date':
@@ -604,17 +609,31 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
       schema.format = 'date-time'
       break
 
-    case 'select':
-      if (field.options && Array.isArray(field.options)) {
-        schema.type = 'string'
-        schema.enum = field.options.map((opt) =>
-          typeof opt === 'string' ? opt : opt.value || opt.label,
-        )
-      } else {
-        schema.type = 'string'
+    case 'group':
+      schema.type = 'object'
+      schema.additionalProperties = true
+      break
+
+    case 'json':
+      schema.type = 'object'
+      schema.additionalProperties = true
+      break
+
+    case 'number':
+      schema.type = 'number'
+      if (field.numberConstraints) {
+        const { max, min } = field.numberConstraints
+        if (typeof min === 'number') {schema.minimum = min}
+        if (typeof max === 'number') {schema.maximum = max}
       }
       break
 
+    case 'point':
+      schema.type = 'array'
+      schema.items = { type: 'number' }
+      schema.minItems = 2
+      schema.maxItems = 2
+      break
     case 'radio':
       if (field.options && Array.isArray(field.options)) {
         schema.type = 'string'
@@ -633,48 +652,28 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
       ]
       break
 
-    case 'upload':
-      schema.oneOf = [
-        { type: 'string', description: 'File ID' },
-        { type: 'object', description: 'File document' },
-      ]
-      break
-
     case 'richText':
       schema.type = 'string'
       schema.description = 'Rich text content (Markdown string)'
       schema.examples = ['# Title\n\nSome **bold** text.']
       break
-    case 'json':
-      schema.type = 'object'
-      schema.additionalProperties = true
-      break
 
-    case 'array':
-      schema.type = 'array'
-      schema.items = { type: 'object', additionalProperties: true }
-      if (field.arrayConstraints) {
-        const { minItems, maxItems } = field.arrayConstraints
-        if (typeof minItems === 'number') schema.minItems = minItems
-        if (typeof maxItems === 'number') schema.maxItems = maxItems
+    case 'select':
+      if (field.options && Array.isArray(field.options)) {
+        schema.type = 'string'
+        schema.enum = field.options.map((opt) =>
+          typeof opt === 'string' ? opt : opt.value || opt.label,
+        )
+      } else {
+        schema.type = 'string'
       }
       break
 
-    case 'blocks':
-      schema.type = 'array'
-      schema.items = { type: 'object', additionalProperties: true }
-      break
-
-    case 'group':
-      schema.type = 'object'
-      schema.additionalProperties = true
-      break
-
-    case 'point':
-      schema.type = 'array'
-      schema.items = { type: 'number' }
-      schema.minItems = 2
-      schema.maxItems = 2
+    case 'upload':
+      schema.oneOf = [
+        { type: 'string', description: 'File ID' },
+        { type: 'object', description: 'File document' },
+      ]
       break
 
     default:
@@ -701,11 +700,11 @@ export async function executeTool(
   payload: BasePayload,
   analysis: CollectionAnalysis,
   allowedOperations?: {
-    list?: boolean
-    get?: boolean
     create?: boolean
-    update?: boolean
     delete?: boolean
+    get?: boolean
+    list?: boolean
+    update?: boolean
   },
   mcpOptions?: {
     richText?: {
@@ -757,9 +756,6 @@ export async function executeTool(
    */
   const auth = getAuthContext()
   const mockReq = {
-    payload, // Required: reference to the Payload instance
-    locale: input.locale || undefined, // Optional: pass locale if provided in input
-    fallbackLocale: undefined, // Optional: fallback locale for i18n
     context: {
       /**
        * This context object can be used to:
@@ -768,10 +764,13 @@ export async function executeTool(
        * 3. Conditionally execute certain hooks
        */
       fromMCP: true, // Flag to identify MCP operations in hooks
-      triggerAfterChange: true, // Explicitly indicate hooks should run
-      tokenId: auth?.tokenId,
       scopes: auth?.scopes,
+      tokenId: auth?.tokenId,
+      triggerAfterChange: true, // Explicitly indicate hooks should run
     },
+    fallbackLocale: undefined, // Optional: fallback locale for i18n
+    locale: input.locale || undefined, // Optional: pass locale if provided in input
+    payload, // Required: reference to the Payload instance
     user: auth?.userId ? ({ id: auth.userId, role: auth.userRole } as any) : null, // If token is user-linked, impersonate for access control
     /**
      * Note: We're not including all properties of a real Express Request object
@@ -808,32 +807,56 @@ export async function executeTool(
   }
 
   switch (operation) {
-    case 'list':
-      if (analysis.isGlobal) throw new Error('List operation is not supported for globals')
+    case 'create':
+      if (analysis.isGlobal) {throw new Error('Create operation is not supported for globals')}
       return await (async () => {
+        const processedData = await convertMarkdownFieldsToLexicalForData(
+          input.data || {},
+          analysis,
+          payload.config,
+        )
         /**
-         * LIST operations typically don't trigger change hooks, but may trigger:
-         * - beforeRead hooks
-         * - afterRead hooks
-         * These are generally lightweight and add minimal overhead.
+         * CREATE operations trigger:
+         * - beforeValidate hooks
+         * - beforeChange hooks
+         * - afterChange hooks (THIS IS WHERE REVALIDATION HAPPENS)
+         * - afterRead hooks (when returning the created document)
+         *
+         * Performance impact depends on hook complexity but typically adds 10-50ms total.
          */
-        const result = await payload.find({
-          collection: collection as CollectionSlug,
-          where: input.where || {},
-          limit: input.limit || 10,
-          page: input.page || 1,
-          sort: input.sort,
+        const result = await payload.create({
+          collection,
+          data: processedData,
           depth: input.depth || 1,
-          draft: input.isDraft,
-          req: mockReq, // Pass mock request to trigger read hooks
+          req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
         })
-        return await attachMarkdownFromLexicalInResult(
+        const finalResult = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
-          true,
+          false,
         )
+        return finalResult
+      })()
+
+    case 'delete':
+      if (analysis.isGlobal) {throw new Error('Delete operation is not supported for globals')}
+      return await (async () => {
+        /**
+         * DELETE operations trigger:
+         * - beforeDelete hooks
+         * - afterDelete hooks (THIS IS WHERE REVALIDATION HAPPENS)
+         *
+         * Generally the fastest operation as no validation is needed.
+         * Revalidation adds similar overhead as other operations.
+         */
+        const deleted = await payload.delete({
+          id: input.id,
+          collection,
+          req: mockReq, // CRITICAL: Pass mock request to trigger afterDelete hooks
+        })
+        return deleted
       })()
 
     case 'get':
@@ -852,8 +875,8 @@ export async function executeTool(
               req: mockReq, // Pass mock request for global operations too
             })
           : await payload.findByID({
-              collection: collection as CollectionSlug,
               id: input.id,
+              collection,
               depth: input.depth || 1,
               draft: input.isDraft,
               req: mockReq, // Pass mock request to trigger read hooks
@@ -867,37 +890,32 @@ export async function executeTool(
         )
       })()
 
-    case 'create':
-      if (analysis.isGlobal) throw new Error('Create operation is not supported for globals')
+    case 'list':
+      if (analysis.isGlobal) {throw new Error('List operation is not supported for globals')}
       return await (async () => {
-        const processedData = await convertMarkdownFieldsToLexicalForData(
-          input.data || {},
-          analysis,
-          payload.config,
-        )
         /**
-         * CREATE operations trigger:
-         * - beforeValidate hooks
-         * - beforeChange hooks
-         * - afterChange hooks (THIS IS WHERE REVALIDATION HAPPENS)
-         * - afterRead hooks (when returning the created document)
-         *
-         * Performance impact depends on hook complexity but typically adds 10-50ms total.
+         * LIST operations typically don't trigger change hooks, but may trigger:
+         * - beforeRead hooks
+         * - afterRead hooks
+         * These are generally lightweight and add minimal overhead.
          */
-        const result = await payload.create({
-          collection: collection as CollectionSlug,
-          data: processedData,
+        const result = await payload.find({
+          collection,
           depth: input.depth || 1,
-          req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
+          draft: input.isDraft,
+          limit: input.limit || 10,
+          page: input.page || 1,
+          req: mockReq, // Pass mock request to trigger read hooks
+          sort: input.sort,
+          where: input.where || {},
         })
-        const finalResult = await attachMarkdownFromLexicalInResult(
+        return await attachMarkdownFromLexicalInResult(
           result,
           analysis,
           payload.config,
           mcpOptions?.richText,
-          false,
+          true,
         )
-        return finalResult
       })()
 
     case 'update':
@@ -927,8 +945,8 @@ export async function executeTool(
               req: mockReq, // CRITICAL: Pass mock request for global updates
             })
           : await payload.update({
-              collection: collection as CollectionSlug,
               id: input.id,
+              collection,
               data: processedData,
               depth: input.depth || 1,
               req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
@@ -941,25 +959,6 @@ export async function executeTool(
           false,
         )
         return finalResult
-      })()
-
-    case 'delete':
-      if (analysis.isGlobal) throw new Error('Delete operation is not supported for globals')
-      return await (async () => {
-        /**
-         * DELETE operations trigger:
-         * - beforeDelete hooks
-         * - afterDelete hooks (THIS IS WHERE REVALIDATION HAPPENS)
-         *
-         * Generally the fastest operation as no validation is needed.
-         * Revalidation adds similar overhead as other operations.
-         */
-        const deleted = await payload.delete({
-          collection: collection as CollectionSlug,
-          id: input.id,
-          req: mockReq, // CRITICAL: Pass mock request to trigger afterDelete hooks
-        })
-        return deleted
       })()
 
     default:

@@ -1,34 +1,34 @@
 import type { CollectionConfig } from 'payload'
+
 import crypto from 'crypto'
 
 export const McpTokens: CollectionConfig = {
   slug: 'mcp-tokens',
+  access: {
+    admin: ({ req }) => Boolean(req.user && 'role' in req.user && req.user.role === 'admin'),
+    create: ({ req }) => Boolean(req.user),
+    delete: ({ req }) => Boolean(req.user && 'role' in req.user && req.user.role === 'admin'),
+    read: ({ req }) => (req.user && 'role' in req.user && req.user.role === 'admin' ? true : { user: { equals: req.user?.id } }),
+    update: ({ req }) => (req.user && 'role' in req.user && req.user.role === 'admin' ? true : { user: { equals: req.user?.id } }),
+  },
   admin: {
-    useAsTitle: 'label',
     defaultColumns: ['label', 'user', 'type', 'active', 'expiresAt'],
     description:
       'MCP API tokens. User-linked tokens impersonate the user; service/admin tokens use scopes only.',
+    useAsTitle: 'label',
   },
-  access: {
-    read: ({ req }) => (req.user && 'role' in req.user && req.user.role === 'admin' ? true : { user: { equals: req.user?.id } }),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => (req.user && 'role' in req.user && req.user.role === 'admin' ? true : { user: { equals: req.user?.id } }),
-    delete: ({ req }) => Boolean(req.user && 'role' in req.user && req.user.role === 'admin'),
-    admin: ({ req }) => Boolean(req.user && 'role' in req.user && req.user.role === 'admin'),
-  },
-  timestamps: true,
   fields: [
     { name: 'label', type: 'text', required: true },
     {
       name: 'type',
       type: 'select',
-      required: true,
       defaultValue: 'user',
       options: [
         { label: 'User Token', value: 'user' },
         { label: 'Service Token', value: 'service' },
         { label: 'Admin Token', value: 'admin' },
       ],
+      required: true,
     },
     { name: 'user', type: 'relationship', relationTo: 'users' },
     {
@@ -42,7 +42,7 @@ export const McpTokens: CollectionConfig = {
     },
     { name: 'active', type: 'checkbox', defaultValue: true },
     { name: 'expiresAt', type: 'date' },
-    { name: 'tokenHash', type: 'text', required: true, admin: { readOnly: true } },
+    { name: 'tokenHash', type: 'text', admin: { readOnly: true }, required: true },
   ],
   hooks: {
     beforeValidate: [
@@ -59,4 +59,5 @@ export const McpTokens: CollectionConfig = {
       },
     ],
   },
+  timestamps: true,
 }
