@@ -50,11 +50,17 @@ jobs:
       - name: Run type checking
         run: pnpm tsc --noEmit
 
+      - name: Run linting
+        run: pnpm lint
+
       - name: Run tests
         run: pnpm test:run
 
       - name: Run test coverage
         run: pnpm test:coverage
+
+      - name: Check bundle size
+        run: pnpm size-check
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

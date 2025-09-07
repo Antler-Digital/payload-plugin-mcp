@@ -15,9 +15,16 @@
   "homepage": "https://github.com/Antler-Digital/payload-plugin-mcp",
   "keywords": [
     "payload",
+    "payloadcms",
+    "payload-plugin",
     "mcp",
-    "model context protocol",
-    "ai"
+    "model-context-protocol",
+    "ai",
+    "cms",
+    "plugin",
+    "claude",
+    "anthropic",
+    "headless-cms"
   ],
   "contributors": [
     {
@@ -41,13 +48,17 @@
   "main": "./src/exports/index.ts",
   "types": "./src/exports/index.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "DEPLOYMENT_GUIDE.md"
   ],
   "scripts": {
     "build:app": "next build dev",
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
     "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
-    "build:types": "tsc --outDir dist --rootDir ./src",
+    "build:types": "tsc --project tsconfig.build.json",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "clean": "rimraf {dist,*.tsbuildinfo}",
@@ -65,7 +76,15 @@
     "release": "pnpm build && changeset version && changeset publish",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "prepack": "pnpm build",
+    "postpack": "pnpm clean",
+    "size-check": "size-limit",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@changesets/cli": "^2.29.6",
@@ -107,14 +126,18 @@
     "react-dom": "19.1.0",
     "rimraf": "3.0.2",
     "sharp": "0.34.2",
+    "size-limit": "^11.1.6",
+    "@size-limit/preset-small-lib": "^11.1.6",
     "sort-package-json": "^2.10.0",
     "tsx": "^4.19.2",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.2",
+    "@vitest/ui": "^3.1.2",
+    "vitepress": "^1.5.0"
   },
   "peerDependencies": {
-    "payload": "^latest"
+    "payload": ">=3.0.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0 || >=22.0.0",

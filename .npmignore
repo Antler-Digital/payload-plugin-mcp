@@ -1,12 +1,61 @@
-.changeset/
-.git/
-src/
-./tailwind.config.js
-./tailwind.config.ts
-.swcrc
-.swcrc-build
-.env
-.github
+# Development files
+dev/
+docs/
+examples/
+.github/
+.vscode/
+.idea/
+
+# Build artifacts
+*.tsbuildinfo
 tsconfig.json
-.tsbuildinfo
-.npmrc
+tsconfig.*.json
+.swcrc
+
+# Test files
+**/*.test.*
+**/*.spec.*
+test/
+tests/
+coverage/
+.nyc_output/
+*.lcov
+
+# Development tools
+eslint.config.js
+prettier.config.js
+vitest.config.js
+playwright.config.js
+.eslintrc*
+.prettierrc*
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+
+# Lock files (keep pnpm-lock.yaml for reproducible builds)
+package-lock.json
+yarn.lock
+
+# Misc
+.changeset/
