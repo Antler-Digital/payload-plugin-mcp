@@ -45,14 +45,14 @@ The plugin supports multiple configuration formats for maximum flexibility:
 ```typescript
 // payload.config.ts
 import { buildConfig } from 'payload'
-import { payloadPluginMcp } from 'payload-plugin-mcp'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 
 export default buildConfig({
   collections: [
     // your collections here
   ],
   plugins: [
-    payloadPluginMcp({
+    PayloadPluginMcp({
       apiKey: process.env.MCP_API_KEY,
       collections: 'all', // Expose all collections with default operations
       defaultOperations: {
@@ -72,7 +72,7 @@ export default buildConfig({
 ```typescript
 // payload.config.ts
 import { buildConfig } from 'payload'
-import { payloadPluginMcp } from 'payload-plugin-mcp'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 // Import your collections
 import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
@@ -81,7 +81,7 @@ import { Media } from './collections/Media'
 export default buildConfig({
   collections: [Posts, Users, Media],
   plugins: [
-    payloadPluginMcp({
+    PayloadPluginMcp({
       apiKey: process.env.MCP_API_KEY,
       // Pass collections directly (like Payload's native format)
       collections: [
@@ -106,7 +106,7 @@ export default buildConfig({
 ```typescript
 // payload.config.ts
 import { buildConfig } from 'payload'
-import { payloadPluginMcp } from 'payload-plugin-mcp'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -114,7 +114,7 @@ import { Media } from './collections/Media'
 export default buildConfig({
   collections: [Posts, Users, Media],
   plugins: [
-    payloadPluginMcp({
+    PayloadPluginMcp({
       apiKey: process.env.MCP_API_KEY,
       collections: [
         // Simple collection (uses default operations)
@@ -358,7 +358,7 @@ The plugin supports API key authentication:
 
 ```typescript
 // CMS with different access levels
-payloadPluginMcp({
+PayloadPluginMcp({
   collections: [
     // Public content - read-only
     { 
@@ -396,7 +396,7 @@ payloadPluginMcp({
 
 ```typescript
 // E-commerce with product management
-payloadPluginMcp({
+PayloadPluginMcp({
   collections: [
     // Products - full management
     { 
