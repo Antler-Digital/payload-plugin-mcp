@@ -47,6 +47,7 @@
   },
   "main": "./src/exports/index.ts",
   "types": "./src/exports/index.ts",
+  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
@@ -57,7 +58,7 @@
   "scripts": {
     "build:app": "next build dev",
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
-    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
+    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths --ignore \"**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/__tests__/**,**/tests/**,src/test/**\"",
     "build:types": "tsc --project tsconfig.build.json",
     "changeset": "changeset",
     "changeset:version": "changeset version",
@@ -87,15 +88,13 @@
     "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
-    "@changesets/cli": "^2.29.6",
-    "@fastify/cors": "^10.1.0",
-    "@modelcontextprotocol/sdk": "^1.17.5",
-    "json-schema": "^0.4.0",
     "mcp-handler": "^1.0.2",
-    "ts-json-schema-generator": "^2.4.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.6",
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "ts-json-schema-generator": "^2.4.0",
     "@eslint/eslintrc": "^3.3.1",
     "@payloadcms/db-mongodb": "latest",
     "@payloadcms/db-postgres": "latest",
@@ -141,8 +140,7 @@
     "payload": ">=3.0.0"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0 || >=22.0.0",
-    "pnpm": "^9 || ^10"
+    "node": "^18.20.2 || >=20.9.0 || >=22.0.0"
   },
   "publishConfig": {
     "exports": {
