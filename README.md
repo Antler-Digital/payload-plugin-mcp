@@ -2,6 +2,8 @@
 
 A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) server compatible with Claude Desktop. This plugin automatically generates MCP tools for all your PayloadCMS collections and provides both embedded and standalone server options.
 
+test
+
 ## Features
 
 - 🚀 **Automatic Tool Generation**: Generates MCP tools for all PayloadCMS collections
@@ -85,9 +87,9 @@ export default buildConfig({
       apiKey: process.env.MCP_API_KEY,
       // Pass collections directly (like Payload's native format)
       collections: [
-        Posts,    // Uses default operations
-        Users,    // Uses default operations  
-        Media,    // Uses default operations
+        Posts, // Uses default operations
+        Users, // Uses default operations
+        Media, // Uses default operations
       ],
       defaultOperations: {
         list: true,
@@ -119,7 +121,7 @@ export default buildConfig({
       collections: [
         // Simple collection (uses default operations)
         Posts,
-        
+
         // Collection with custom options
         {
           collection: Users,
@@ -127,16 +129,16 @@ export default buildConfig({
             operations: {
               list: true,
               get: true,
-              create: true,  // Enable creation for users
-              update: true,  // Enable updates for users
+              create: true, // Enable creation for users
+              update: true, // Enable updates for users
               delete: false, // Keep delete disabled
             },
-            toolPrefix: 'user',         // Custom tool prefix
+            toolPrefix: 'user', // Custom tool prefix
             description: 'user management', // Custom description
             excludeFields: ['password'], // Hide sensitive fields
           },
         },
-        
+
         // Media with different settings
         {
           collection: Media,
@@ -173,11 +175,13 @@ pnpm dev
 ```
 
 The plugin will automatically:
+
 - Generate MCP tools for your collections
 - Start an MCP server on the configured port
 - Log available endpoints and tools
 
 Expected output:
+
 ```
 ✅ PayloadCMS MCP Plugin initialized
 🔧 Collections exposed: posts, users, media
@@ -203,6 +207,7 @@ The plugin generates tools based on your collection configuration:
 ### Tool Examples
 
 #### List Tool (`posts_list`)
+
 ```json
 {
   "name": "posts_list",
@@ -218,6 +223,7 @@ The plugin generates tools based on your collection configuration:
 ```
 
 #### Custom Tool (`user_create`)
+
 ```json
 {
   "name": "user_create",
@@ -243,31 +249,31 @@ interface CollectionMcpOptions {
    * Operations to enable for this collection
    */
   operations?: {
-    list?: boolean     // List documents with filtering/pagination
-    get?: boolean      // Get single document by ID
-    create?: boolean   // Create new documents
-    update?: boolean   // Update existing documents
-    delete?: boolean   // Delete documents
+    list?: boolean // List documents with filtering/pagination
+    get?: boolean // Get single document by ID
+    create?: boolean // Create new documents
+    update?: boolean // Update existing documents
+    delete?: boolean // Delete documents
   }
-  
+
   /**
    * Custom tool naming prefix (defaults to collection slug)
    * Example: 'user' generates 'user_list', 'user_get', etc.
    */
   toolPrefix?: string
-  
+
   /**
    * Custom description for this collection's tools
    * Used in tool descriptions: "List documents from the {description}"
    */
   description?: string
-  
+
   /**
    * Fields to exclude from schemas (useful for sensitive data)
    * Example: ['password', 'secret', 'internal']
    */
   excludeFields?: string[]
-  
+
   /**
    * Additional metadata for this collection
    */
@@ -361,32 +367,32 @@ The plugin supports API key authentication:
 PayloadPluginMcp({
   collections: [
     // Public content - read-only
-    { 
-      collection: Posts, 
-      options: { 
+    {
+      collection: Posts,
+      options: {
         operations: { list: true, get: true },
-        description: 'blog posts'
-      }
+        description: 'blog posts',
+      },
     },
-    
+
     // Admin content - full access
-    { 
-      collection: Pages, 
-      options: { 
+    {
+      collection: Pages,
+      options: {
         operations: { list: true, get: true, create: true, update: true, delete: true },
         toolPrefix: 'page',
-        description: 'website pages'
-      }
+        description: 'website pages',
+      },
     },
-    
+
     // Media - managed uploads
-    { 
-      collection: Media, 
-      options: { 
+    {
+      collection: Media,
+      options: {
         operations: { list: true, get: true, create: true, delete: true },
         toolPrefix: 'asset',
-        description: 'media assets'
-      }
+        description: 'media assets',
+      },
     },
   ],
 })
@@ -399,29 +405,29 @@ PayloadPluginMcp({
 PayloadPluginMcp({
   collections: [
     // Products - full management
-    { 
-      collection: Products, 
-      options: { 
+    {
+      collection: Products,
+      options: {
         operations: { list: true, get: true, create: true, update: true },
-        excludeFields: ['internalNotes', 'cost']
-      }
+        excludeFields: ['internalNotes', 'cost'],
+      },
     },
-    
+
     // Orders - read and update only
-    { 
-      collection: Orders, 
-      options: { 
+    {
+      collection: Orders,
+      options: {
         operations: { list: true, get: true, update: true },
-        excludeFields: ['paymentDetails']
-      }
+        excludeFields: ['paymentDetails'],
+      },
     },
-    
+
     // Categories - read-only
-    { 
-      collection: Categories, 
-      options: { 
-        operations: { list: true, get: true }
-      }
+    {
+      collection: Categories,
+      options: {
+        operations: { list: true, get: true },
+      },
     },
   ],
 })
@@ -452,7 +458,7 @@ const config = buildConfig({
 export async function GET(req: NextRequest) {
   // Initialize payload if needed
   const payload = await getPayload({ config })
-  
+
   // Create mock request object compatible with PayloadRequest
   const payloadReq = {
     url: req.url,
@@ -461,7 +467,7 @@ export async function GET(req: NextRequest) {
     payload,
     // Add other required properties
   }
-  
+
   // Use the MCP handler
   const handler = mcpServerHandler({
     toolDescriptors: [], // Will be populated from config
@@ -469,7 +475,7 @@ export async function GET(req: NextRequest) {
     serverName: 'PayloadCMS MCP Server',
     serverDescription: 'MCP server for PayloadCMS',
   })
-  
+
   return handler(payloadReq)
 }
 
@@ -481,6 +487,7 @@ export async function POST(req: NextRequest) {
 ### 2. Environment Variables
 
 Set in Vercel dashboard:
+
 ```
 MCP_API_KEY=your-production-api-key
 ```
@@ -537,18 +544,18 @@ npx @modelcontextprotocol/inspector http://localhost:3001/mcp/sse?api_key=your-a
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `apiKey` | string | `process.env.MCP_API_KEY` | API key for authentication |
-| `collections` | CollectionMcpConfig[] \| 'all' | 'all' | Collections to expose |
-| `defaultOperations` | ToolOperations | `{list: true, get: true}` | Default operations for collections |
-| `port` | number | 3001 | Server port |
-| `host` | string | '0.0.0.0' | Server host |
-| `enableHttpTransport` | boolean | true | Enable HTTP server |
-| `enableStdioTransport` | boolean | true | Enable stdio transport |
-| `serverName` | string | 'PayloadCMS MCP Server' | Server name |
-| `serverDescription` | string | Auto-generated | Server description |
-| `disabled` | boolean | false | Disable the plugin |
+| Option                 | Type                           | Default                   | Description                        |
+| ---------------------- | ------------------------------ | ------------------------- | ---------------------------------- |
+| `apiKey`               | string                         | `process.env.MCP_API_KEY` | API key for authentication         |
+| `collections`          | CollectionMcpConfig[] \| 'all' | 'all'                     | Collections to expose              |
+| `defaultOperations`    | ToolOperations                 | `{list: true, get: true}` | Default operations for collections |
+| `port`                 | number                         | 3001                      | Server port                        |
+| `host`                 | string                         | '0.0.0.0'                 | Server host                        |
+| `enableHttpTransport`  | boolean                        | true                      | Enable HTTP server                 |
+| `enableStdioTransport` | boolean                        | true                      | Enable stdio transport             |
+| `serverName`           | string                         | 'PayloadCMS MCP Server'   | Server name                        |
+| `serverDescription`    | string                         | Auto-generated            | Server description                 |
+| `disabled`             | boolean                        | false                     | Disable the plugin                 |
 
 ## Troubleshooting
 
