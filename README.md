@@ -309,9 +309,14 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "https://your-domain.com/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "https://your-domain.com/mcp/sse",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
@@ -328,9 +333,14 @@ For local development, you can connect directly:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "http://localhost:3001/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "http://localhost:3001/mcp/sse",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
@@ -499,9 +509,14 @@ MCP_API_KEY=your-production-api-key
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "https://your-app.vercel.app/api/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "https://your-app.vercel.app/api/mcp/sse",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
