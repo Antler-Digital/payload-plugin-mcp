@@ -2,8 +2,6 @@
 
 A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) server compatible with Claude Desktop. This plugin automatically generates MCP tools for all your PayloadCMS collections and provides both embedded and standalone server options.
 
-test
-
 ## Features
 
 - 🚀 **Automatic Tool Generation**: Generates MCP tools for all PayloadCMS collections
