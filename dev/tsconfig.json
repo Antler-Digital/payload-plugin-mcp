@@ -11,25 +11,21 @@
     "../src/**/*.ts",
     "../src/**/*.tsx",
     "next.config.mjs",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "types/**/*.d.ts"
   ],
   "compilerOptions": {
     "baseUrl": "./",
+    "allowImportingTsExtensions": true,
+    "types": ["next"],
     "paths": {
-      "@payload-config": [
-        "./payload.config.ts"
-      ],
-      "payload-plugin-mcp": [
-        "../src/index.ts"
-      ],
-      "payload-plugin-mcp/client": [
-        "../src/exports/client.ts"
-      ],
-      "payload-plugin-mcp/rsc": [
-        "../src/exports/rsc.ts"
-      ]
+      "@payload-config": ["./payload.config.ts"],
+      "payload-plugin-mcp": ["../src/index.ts"],
+      "payload-plugin-mcp/client": ["../src/exports/client.ts"],
+      "payload-plugin-mcp/rsc": ["../src/exports/rsc.ts"]
     },
     "noEmit": true,
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": false
   }
 }

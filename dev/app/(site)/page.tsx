@@ -1,4 +1,6 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
+import Link from 'next/link'
+
 export default function HomePage() {
   return (
     <div className="min-h-screen py-12">
@@ -87,6 +89,43 @@ export default buildConfig({
                 MCP_API_KEY=your-secret-api-key-here
               </code>
             </div>
+          </div>
+        </div>
+
+        {/* Documentation Links */}
+        <div className="bg-white rounded-lg p-8 shadow-sm border mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Documentation</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Link
+              href="/docs/getting-started"
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="text-2xl mr-3">🚀</div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Getting Started</h3>
+                <p className="text-sm text-gray-600">Installation and setup guide</p>
+              </div>
+            </Link>
+            <Link
+              href="/docs/api-reference"
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="text-2xl mr-3">📚</div>
+              <div>
+                <h3 className="font-semibold text-gray-900">API Reference</h3>
+                <p className="text-sm text-gray-600">Complete API documentation</p>
+              </div>
+            </Link>
+            <Link
+              href="/docs/troubleshooting"
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="text-2xl mr-3">🔧</div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Troubleshooting</h3>
+                <p className="text-sm text-gray-600">Common issues and solutions</p>
+              </div>
+            </Link>
           </div>
         </div>
 
