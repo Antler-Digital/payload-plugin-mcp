@@ -995,7 +995,7 @@ function getValueAtPath(obj: any, path: string): any {
   const parts = path.split('.')
   let current = obj
   for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined
+    if (current == null || typeof current !== 'object') {return undefined}
     current = current[part]
   }
   return current
@@ -1015,21 +1015,21 @@ function setValueAtPath(obj: any, path: string, value: any): void {
 }
 
 function projectDoc(doc: any, fields?: string[] | null, includeId: boolean = true): any {
-  if (!fields || fields.length === 0) return doc
+  if (!fields || fields.length === 0) {return doc}
   const projected: any = {}
   if (includeId && doc && typeof doc === 'object' && 'id' in doc) {
     projected.id = doc.id
   }
   for (const path of fields) {
-    if (typeof path !== 'string' || path.trim() === '') continue
+    if (typeof path !== 'string' || path.trim() === '') {continue}
     const value = getValueAtPath(doc, path)
-    if (value !== undefined) setValueAtPath(projected, path, value)
+    if (value !== undefined) {setValueAtPath(projected, path, value)}
   }
   return projected
 }
 
 function applyProjectionToDoc(doc: any, fields?: string[] | null, isCollection: boolean = true) {
-  if (!fields || fields.length === 0) return doc
+  if (!fields || fields.length === 0) {return doc}
   return projectDoc(doc, fields, isCollection)
 }
 
@@ -1038,7 +1038,7 @@ function applyProjectionToListResult(
   fields?: string[] | null,
   isCollection: boolean = true,
 ) {
-  if (!fields || fields.length === 0 || !result || !Array.isArray(result.docs)) return result
+  if (!fields || fields.length === 0 || !result || !Array.isArray(result.docs)) {return result}
   return {
     ...result,
     docs: result.docs.map((d: any) => projectDoc(d, fields, isCollection)),

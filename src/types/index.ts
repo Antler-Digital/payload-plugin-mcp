@@ -221,7 +221,7 @@ export interface McpCapabilities {
     listChanged?: boolean
     subscribe?: boolean
   }
-  sampling?: {}
+  sampling?: any
   tools?: {
     listChanged?: boolean
   }

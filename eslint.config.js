@@ -25,6 +25,8 @@ export const defaultESLintIgnores = [
   '**/dev/',
   '**/.prettierrc.js',
   '**/size-limit.config.js',
+  '**/coverage/',
+  '**/scripts/',
 ]
 
 export default [
