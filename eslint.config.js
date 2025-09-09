@@ -20,14 +20,27 @@ export const defaultESLintIgnores = [
   '**/build/',
   '**/node_modules/',
   '**/temp/',
+  '**/examples/',
+  '**/docs/',
+  '**/dev/',
+  '**/.prettierrc.js',
+  '**/size-limit.config.js',
 ]
 
 export default [
+  {
+    ignores: defaultESLintIgnores,
+  },
   ...payloadEsLintConfig,
   {
     rules: {
       'no-restricted-exports': 'off',
-      '@typescript-eslint/require-await': 'off',
+      'no-console': 'off', // Allow console statements
+      '@typescript-eslint/require-await': 'off', // Allow async functions without await
+      '@typescript-eslint/await-thenable': 'off', // Allow await on non-promises
+      'perfectionist/sort-objects': 'off', // Disable object sorting
+      'perfectionist/sort-union-types': 'off', // Disable union type sorting
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off', // Allow type assertions for compatibility
     },
   },
   {

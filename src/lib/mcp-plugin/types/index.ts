@@ -1,56 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { CollectionConfig, CollectionSlug, Access } from 'payload'
+import type { Access, CollectionConfig, CollectionSlug } from 'payload'
 import type { GlobalConfig } from 'payload'
 
 // JSONSchema7 type definition (since json-schema package doesn't have proper types)
 export interface JSONSchema7 {
-  type?: string | string[]
-  properties?: Record<string, JSONSchema7>
-  items?: JSONSchema7
-  required?: string[]
-  enum?: any[]
-  oneOf?: JSONSchema7[]
-  description?: string
-  format?: string
-  minimum?: number
-  maximum?: number
-  minItems?: number
-  maxItems?: number
-  default?: any
-  examples?: any[]
-  additionalProperties?: boolean | JSONSchema7
   [key: string]: any
+  additionalProperties?: boolean | JSONSchema7
+  default?: any
+  description?: string
+  enum?: any[]
+  examples?: any[]
+  format?: string
+  items?: JSONSchema7
+  maximum?: number
+  maxItems?: number
+  minimum?: number
+  minItems?: number
+  oneOf?: JSONSchema7[]
+  properties?: Record<string, JSONSchema7>
+  required?: string[]
+  type?: string | string[]
 }
 
 export interface ToolDescriptor {
-  name: string
+  collection: string
   description: string
   inputSchema: JSONSchema7
-  outputSchema: JSONSchema7
-  collection: string
+  name: string
   operation: ToolOperation
+  outputSchema: JSONSchema7
 }
 
-export type ToolOperation = 'list' | 'get' | 'create' | 'update' | 'delete'
+export type ToolOperation = 'create' | 'delete' | 'get' | 'list' | 'update'
 
 export interface ToolOperations {
-  list?: boolean
-  get?: boolean
   create?: boolean
-  update?: boolean
   delete?: boolean
+  get?: boolean
+  list?: boolean
+  update?: boolean
 }
 
 // Collection-specific configuration
 export interface CollectionMcpOptions {
-  /**
-   * Operations to enable for this collection
-   */
-  operations?: ToolOperations
-  /**
-   * Custom tool naming prefix (defaults to collection slug)
-   */
-  toolPrefix?: string
   /**
    * Custom description for this collection's tools
    */
@@ -63,75 +55,87 @@ export interface CollectionMcpOptions {
    * Additional metadata for this collection
    */
   metadata?: Record<string, any>
+  /**
+   * Operations to enable for this collection
+   */
+  operations?: ToolOperations
+  /**
+   * Custom tool naming prefix (defaults to collection slug)
+   */
+  toolPrefix?: string
 }
 
 // Collection configuration can be either:
 // 1. Direct collection config
 // 2. Object with collection and options
 export type CollectionMcpConfig =
-  | CollectionConfig
   | {
       collection: CollectionConfig
       options: CollectionMcpOptions
     }
+  | CollectionConfig
 
 // Global configuration can be either:
 // 1. Direct global config
 // 2. Object with global and options
 export type GlobalMcpConfig =
-  | GlobalConfig
   | {
       global: GlobalConfig
       options: CollectionMcpOptions
     }
+  | GlobalConfig
 
 // Collection field analysis (updated to include options)
 export interface FieldAnalysis {
-  name: string
-  type: string
-  required: boolean
-  hasDefault: boolean
+  arrayConstraints?: {
+    maxItems?: number
+    minItems?: number
+  }
   description?: string
+  hasDefault: boolean
+  name: string
+  numberConstraints?: {
+    integer?: boolean
+    max?: number
+    min?: number
+  }
   options?: any[]
-  validation?: any
+  relationship?: {
+    hasMany?: boolean
+    relationTo?: string | string[]
+  }
+  required: boolean
   // Optional constraint metadata for richer schemas
   stringConstraints?: {
-    minLength?: number
-    maxLength?: number
-    pattern?: string
     format?: string
+    maxLength?: number
+    minLength?: number
+    pattern?: string
   }
-  numberConstraints?: {
-    min?: number
-    max?: number
-    integer?: boolean
-  }
-  arrayConstraints?: {
-    minItems?: number
-    maxItems?: number
-  }
-  relationship?: {
-    relationTo?: string | string[]
-    hasMany?: boolean
-  }
+  type: string
   uploadConstraints?: {
-    mimeTypes?: string[]
     maxFileSize?: number
+    mimeTypes?: string[]
   }
+  validation?: any
 }
 
 export interface CollectionAnalysis {
-  slug: CollectionSlug | 'all'
   fields: FieldAnalysis[]
-  hasUpload: boolean
   hasAuth: boolean
-  timestamps: boolean
-  mcpOptions?: CollectionMcpOptions
+  hasUpload: boolean
   /** True when this analysis represents a GlobalConfig rather than a Collection */
   isGlobal?: boolean
+  mcpOptions?: CollectionMcpOptions
+  slug: 'all' | CollectionSlug
+  timestamps: boolean
 }
 
 export type PayloadPluginMcpConfig = {
+  /**
+   * API key for authentication
+   */
+  apiKey: string
   /**
    * Collections to expose via MCP tools
    * Can be:
@@ -139,7 +143,11 @@ export type PayloadPluginMcpConfig = {
    * - Array of CollectionConfig (imported collections)
    * - Array of { collection: CollectionConfig, options: CollectionMcpOptions }
    */
-  collections?: CollectionMcpConfig[] | 'all'
+  collections?: 'all' | CollectionMcpConfig[]
+  /**
+   * Default operations to enable for all collections
+   */
+  defaultOperations?: ToolOperations
   /**
    * Globals to expose via MCP tools
    * Can be:
@@ -147,15 +155,7 @@ export type PayloadPluginMcpConfig = {
    * - Array of GlobalConfig (imported globals)
    * - Array of { global: GlobalConfig, options: CollectionMcpOptions }
    */
-  globals?: GlobalMcpConfig[] | 'all'
-  /**
-   * API key for authentication
-   */
-  apiKey: string
-  /**
-   * Default operations to enable for all collections
-   */
-  defaultOperations?: ToolOperations
+  globals?: 'all' | GlobalMcpConfig[]
 
   /**
    * Media-specific configuration for MCP tools
@@ -183,35 +183,35 @@ export type PayloadPluginMcpConfig = {
    */
   tokens?: {
     /**
-     * Collection slug to store tokens in. Defaults to 'mcp-tokens'.
+     * Optional access controls for the tokens collection installed by the plugin
      */
-    slug?: string
+    access?: {
+      admin?: Access
+      create?: Access
+      delete?: Access
+      read?: Access
+      update?: Access
+    }
     /**
      * Admin interface configuration for the tokens collection
      */
     admin?: {
       /**
-       * Label to display in the admin panel
+       * Default columns to show in the admin list view
        */
-      label?: string
+      defaultColumns?: string[]
       /**
        * Description for the collection
        */
       description?: string
       /**
-       * Default columns to show in the admin list view
+       * Label to display in the admin panel
        */
-      defaultColumns?: string[]
+      label?: string
     }
     /**
-     * Optional access controls for the tokens collection installed by the plugin
+     * Collection slug to store tokens in. Defaults to 'mcp-tokens'.
      */
-    access?: {
-      read?: Access
-      create?: Access
-      update?: Access
-      delete?: Access
-      admin?: Access
-    }
+    slug?: string
   }
 }

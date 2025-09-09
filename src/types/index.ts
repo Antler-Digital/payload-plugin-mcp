@@ -2,53 +2,45 @@ import type { CollectionConfig, Field } from 'payload'
 
 // JSONSchema7 type definition (since json-schema package doesn't have proper types)
 export interface JSONSchema7 {
-  type?: string | string[]
-  properties?: Record<string, JSONSchema7>
-  items?: JSONSchema7
-  required?: string[]
-  enum?: any[]
-  oneOf?: JSONSchema7[]
-  description?: string
-  format?: string
-  minimum?: number
-  maximum?: number
-  minItems?: number
-  maxItems?: number
-  default?: any
-  examples?: any[]
-  additionalProperties?: boolean | JSONSchema7
   [key: string]: any
+  additionalProperties?: boolean | JSONSchema7
+  default?: any
+  description?: string
+  enum?: any[]
+  examples?: any[]
+  format?: string
+  items?: JSONSchema7
+  maximum?: number
+  maxItems?: number
+  minimum?: number
+  minItems?: number
+  oneOf?: JSONSchema7[]
+  properties?: Record<string, JSONSchema7>
+  required?: string[]
+  type?: string | string[]
 }
 
 export interface ToolDescriptor {
-  name: string
+  collection: string
   description: string
   inputSchema: JSONSchema7
-  outputSchema: JSONSchema7
-  collection: string
+  name: string
   operation: ToolOperation
+  outputSchema: JSONSchema7
 }
 
-export type ToolOperation = 'list' | 'get' | 'create' | 'update' | 'delete'
+export type ToolOperation = 'create' | 'delete' | 'get' | 'list' | 'update'
 
 export interface ToolOperations {
-  list?: boolean
-  get?: boolean
   create?: boolean
-  update?: boolean
   delete?: boolean
+  get?: boolean
+  list?: boolean
+  update?: boolean
 }
 
 // Collection-specific configuration
 export interface CollectionMcpOptions {
-  /**
-   * Operations to enable for this collection
-   */
-  operations?: ToolOperations
-  /**
-   * Custom tool naming prefix (defaults to collection slug)
-   */
-  toolPrefix?: string
   /**
    * Custom description for this collection's tools
    */
@@ -61,65 +53,73 @@ export interface CollectionMcpOptions {
    * Additional metadata for this collection
    */
   metadata?: Record<string, any>
+  /**
+   * Operations to enable for this collection
+   */
+  operations?: ToolOperations
+  /**
+   * Custom tool naming prefix (defaults to collection slug)
+   */
+  toolPrefix?: string
 }
 
 // Collection configuration can be either:
 // 1. Direct collection config
 // 2. Object with collection and options
 export type CollectionMcpConfig =
-  | CollectionConfig
   | {
       collection: CollectionConfig
       options: CollectionMcpOptions
     }
+  | CollectionConfig
 
 export interface AuthConfig {
   apiKey: string
 }
 
 export interface McpServerConfig {
-  toolDescriptors: ToolDescriptor[]
-  port: number
-  host: string
   apiKey: string
-  serverName: string
-  serverDescription: string
   enableStdio: boolean
+  host: string
+  port: number
+  serverDescription: string
+  serverName: string
+  toolDescriptors: ToolDescriptor[]
 }
 
 export interface McpServerHandlerConfig {
-  toolDescriptors: ToolDescriptor[]
   apiKey: string
-  serverName: string
   serverDescription: string
+  serverName: string
+  toolDescriptors: ToolDescriptor[]
 }
 
 export interface McpInvokeRequest {
-  tool: string
   input: Record<string, any>
+  tool: string
 }
 
 export interface McpInvokeResponse {
-  success: boolean
-  result?: any
   error?: {
-    message: string
     code: string
+    message: string
   }
+  result?: any
+  success: boolean
 }
 
 export interface McpListToolsResponse {
-  tools: Array<{
-    name: string
-    description: string
-    inputSchema: JSONSchema7
-    outputSchema: JSONSchema7
-  }>
   serverInfo: {
-    name: string
     description: string
+    name: string
     version: string
   }
+  tools: Array<{
+    description: string
+    inputSchema: JSONSchema7
+    name: string
+    outputSchema: JSONSchema7
+  }>
 }
 
 export interface McpSchemaResponse {
@@ -129,17 +129,17 @@ export interface McpSchemaResponse {
 
 // PayloadCMS operation interfaces
 export interface PayloadListParams {
-  where?: Record<string, any>
+  depth?: number
   limit?: number
   page?: number
-  sort?: string
   select?: Record<string, boolean>
-  depth?: number
+  sort?: string
+  where?: Record<string, any>
 }
 
 export interface PayloadGetParams {
-  id: string
   depth?: number
+  id: string
   select?: Record<string, boolean>
 }
 
@@ -149,9 +149,9 @@ export interface PayloadCreateParams {
 }
 
 export interface PayloadUpdateParams {
-  id: string
   data: Record<string, any>
   depth?: number
+  id: string
 }
 
 export interface PayloadDeleteParams {
@@ -160,45 +160,45 @@ export interface PayloadDeleteParams {
 
 // Collection field analysis (updated to include options)
 export interface FieldAnalysis {
-  name: string
-  type: string
-  required: boolean
-  hasDefault: boolean
   description?: string
+  hasDefault: boolean
+  name: string
   options?: any[]
+  required: boolean
+  type: string
   validation?: any
 }
 
 export interface CollectionAnalysis {
-  slug: string
   fields: FieldAnalysis[]
-  hasUpload: boolean
   hasAuth: boolean
-  timestamps: boolean
+  hasUpload: boolean
   mcpOptions?: CollectionMcpOptions
+  slug: string
+  timestamps: boolean
 }
 
 // MCP Protocol types
 export interface McpMessage {
+  id?: number | string
   jsonrpc: '2.0'
-  id?: string | number
   method: string
   params?: Record<string, any>
 }
 
 export interface McpRequest extends McpMessage {
-  id: string | number
+  id: number | string
 }
 
 export interface McpResponse {
-  jsonrpc: '2.0'
-  id: string | number
-  result?: any
   error?: {
     code: number
-    message: string
     data?: any
+    message: string
   }
+  id: number | string
+  jsonrpc: '2.0'
+  result?: any
 }
 
 export interface McpNotification extends McpMessage {
@@ -207,38 +207,38 @@ export interface McpNotification extends McpMessage {
 
 // SSE specific types
 export interface SseEvent {
-  event?: string
   data: string
+  event?: string
   id?: string
   retry?: number
 }
 
 export interface McpCapabilities {
-  tools?: {
-    listChanged?: boolean
-  }
-  resources?: {
-    subscribe?: boolean
-    listChanged?: boolean
-  }
   prompts?: {
     listChanged?: boolean
   }
+  resources?: {
+    listChanged?: boolean
+    subscribe?: boolean
+  }
   sampling?: {}
+  tools?: {
+    listChanged?: boolean
+  }
 }
 
 export interface McpInitializeParams {
-  protocolVersion: string
   capabilities: McpCapabilities
   clientInfo: {
     name: string
     version: string
   }
+  protocolVersion: string
 }
 
 export interface McpInitializeResponse {
-  protocolVersion: string
   capabilities: McpCapabilities
+  protocolVersion: string
   serverInfo: {
     name: string
     version: string

@@ -1,33 +1,37 @@
+import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
+import type { BasePayload, Config } from 'payload'
+
+import crypto from 'crypto'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createMcpHandler } from 'mcp-handler'
-import { BasePayload, Config } from 'payload'
+import { z } from 'zod'
+
+import type { PayloadPluginMcpConfig } from './types/index.js'
+import type {
+  MediaUploadOptions} from './utils/media-upload.js';
+
+import { runWithAuthContext } from './auth-context.js'
+
 // import { baseTools } from './tools/base-tools'
 import {
   defaultOperations,
   getCollectionsToExpose,
   getGlobalsToExpose,
 } from './utils/get-collections-to-expose.js'
-import { executeTool, generateToolDescriptors } from './utils/tool-generator.js'
-import { buildInputZodShape } from './utils/zod-schema.js'
-import type { PayloadPluginMcpConfig } from './types/index.js'
-import { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
-import crypto from 'crypto'
-import { runWithAuthContext } from './auth-context.js'
-import { z } from 'zod'
-
 import {
-  uploadMedia,
   createMediaUploadTools,
   determineUploadStrategy,
-  validateFileSize,
-  MediaUploadOptions,
+  uploadMedia,
+  validateFileSize
 } from './utils/media-upload.js'
+import { executeTool, generateToolDescriptors } from './utils/tool-generator.js'
+import { buildInputZodShape } from './utils/zod-schema.js'
 
 type RegisteredToolSummary = {
-  name: string
   collection: string
-  operation: string
   description: string
+  name: string
+  operation: string
 }
 let registeredTools: RegisteredToolSummary[] = []
 export const getRegisteredTools = (): RegisteredToolSummary[] => registeredTools
@@ -44,7 +48,7 @@ export const getMcpRequestHandler = (
   config: Config,
   options: PayloadPluginMcpConfig,
 ) => {
-  if (cachedRouteHandler && cachedInitialized) return cachedRouteHandler
+  if (cachedRouteHandler && cachedInitialized) {return cachedRouteHandler}
   payloadInstance = payload
 
   // Precompute and expose tool list for discovery endpoints even before the
@@ -64,8 +68,8 @@ export const getMcpRequestHandler = (
     registeredTools = preDescriptors.map((t) => ({
       name: t.name,
       collection: String(t.collection),
-      operation: String(t.operation),
       description: t.description,
+      operation: String(t.operation),
     }))
   } catch (_ignore) {
     // noop: discovery can still proceed; tools may remain empty until init
@@ -102,8 +106,8 @@ export const getMcpRequestHandler = (
       registeredTools = allTools.map((t: any) => ({
         name: t.name,
         collection: String(t.collection || (t.name?.startsWith('media_') ? 'media' : 'utility')),
-        operation: String(t.operation || (t.name?.startsWith('media_') ? 'utility' : 'utility')),
         description: t.description,
+        operation: String(t.operation || (t.name?.startsWith('media_') ? 'utility' : 'utility')),
       }))
       console.log(
         '[MCP] Registering tools:',
@@ -124,10 +128,10 @@ export const getMcpRequestHandler = (
           const schemaShape = Object.entries((tool as any).inputSchema.properties || {}).reduce(
             (acc, [key, value]: [string, any]) => {
               let fieldSchema: any = z.any()
-              if (value.type === 'string') fieldSchema = z.string()
-              else if (value.type === 'number') fieldSchema = z.number()
-              else if (value.type === 'boolean') fieldSchema = z.boolean()
-              else if (value.type === 'object') fieldSchema = z.record(z.any(), z.any())
+              if (value.type === 'string') {fieldSchema = z.string()}
+              else if (value.type === 'number') {fieldSchema = z.number()}
+              else if (value.type === 'boolean') {fieldSchema = z.boolean()}
+              else if (value.type === 'object') {fieldSchema = z.record(z.any(), z.any())}
 
               // Make optional if not in required array
               const required = (tool as any).inputSchema.required || []
@@ -163,12 +167,12 @@ export const getMcpRequestHandler = (
                       {
                         type: 'text',
                         text: JSON.stringify({
-                          valid: validation.valid,
+                          error: validation.error,
+                          fileSizeMB: (fileSize / 1024 / 1024).toFixed(2),
                           maxSize: validation.maxSize,
                           maxSizeMB: (validation.maxSize / 1024 / 1024).toFixed(2),
-                          fileSizeMB: (fileSize / 1024 / 1024).toFixed(2),
-                          error: validation.error,
                           recommendedStrategy: strategy,
+                          valid: validation.valid,
                         }),
                       },
                     ],
@@ -192,8 +196,8 @@ export const getMcpRequestHandler = (
                     {
                       type: 'text',
                       text: JSON.stringify({
-                        success: false,
                         error: error instanceof Error ? error.message : 'Unknown error',
+                        success: false,
                       }),
                     },
                   ],
@@ -206,10 +210,10 @@ export const getMcpRequestHandler = (
 
         // Regular tool registration for non-media tools
         const analysis = analyses.find((c) => c.slug === (tool as any).collection)
-        if (!analysis) return
+        if (!analysis) {return}
         // Skip utility operations as they don't have standard CRUD operations
-        if ((tool as any).operation === 'utility') return
-        const paramsShape = buildInputZodShape(analysis, (tool as any).operation as any)
+        if ((tool as any).operation === 'utility') {return}
+        const paramsShape = buildInputZodShape(analysis, (tool as any).operation)
 
         server.tool(
           tool.name,
@@ -221,7 +225,7 @@ export const getMcpRequestHandler = (
             const redactKeys = ['password', 'token', 'apiKey', 'secret', 'resetToken']
             if (redacted && typeof redacted === 'object') {
               for (const key of redactKeys) {
-                if (key in redacted) (redacted as Record<string, unknown>)[key] = '***'
+                if (key in redacted) {(redacted)[key] = '***'}
               }
               if ('data' in redacted && redacted.data && typeof redacted.data === 'object') {
                 for (const key of redactKeys) {
@@ -234,8 +238,8 @@ export const getMcpRequestHandler = (
 
             console.log(`[MCP] Executing tool: ${tool.name}`, {
               collection: (tool as any).collection,
-              operation: (tool as any).operation,
               input: redacted,
+              operation: (tool as any).operation,
             })
 
             const result = await executeTool(
@@ -273,11 +277,11 @@ export const getMcpRequestHandler = (
                 text: JSON.stringify(
                   analyses.map((c) => ({
                     slug: c.slug,
-                    hasUpload: c.hasUpload,
                     hasAuth: c.hasAuth,
-                    timestamps: c.timestamps,
-                    operations: c.mcpOptions?.operations || defaultOperations,
+                    hasUpload: c.hasUpload,
                     isGlobal: Boolean(c.isGlobal),
+                    operations: c.mcpOptions?.operations || defaultOperations,
+                    timestamps: c.timestamps,
                   })),
                 ),
               },
@@ -328,7 +332,7 @@ export const getMcpRequestHandler = (
 const verifyToken = async (
   req: Request,
   bearerToken?: string,
-): Promise<AuthInfo | { error: string; details: string } | undefined> => {
+): Promise<{ details: string; error: string } | AuthInfo | undefined> => {
   try {
     const url = new URL(req.url)
     const tokenFromQuery = url.searchParams.get('token') || ''
@@ -336,41 +340,41 @@ const verifyToken = async (
 
     if (!token) {
       return {
-        error: 'missing_token',
         details: 'No token provided in Authorization header or query parameter',
+        error: 'missing_token',
       }
     }
 
     // Support legacy env key for emergencies
     if (process.env.MCP_API_KEY && token === process.env.MCP_API_KEY) {
       return {
-        token,
-        scopes: ['collections:*:*', 'media:upload', 'mcp:describe'],
         clientId: 'env-key',
-        extra: { userId: 'env-key', role: 'admin' },
+        extra: { role: 'admin', userId: 'env-key' },
+        scopes: ['collections:*:*', 'media:upload', 'mcp:describe'],
+        token,
       }
     }
 
     // Lookup in Tokens collection by SHA-256 hash
     if (!payloadInstance) {
       return {
-        error: 'payload_instance_missing',
         details: 'Payload instance is not available for token lookup',
+        error: 'payload_instance_missing',
       }
     }
-    const match = await (payloadInstance as BasePayload).find({
+    const match = await (payloadInstance).find({
       collection: (globalThis as any).__MCP_TOKEN_SLUG__ || 'mcp-tokens',
-      where: {
-        tokenHash: { equals: token },
-        active: { equals: true },
-      },
       depth: 0,
+      where: {
+        active: { equals: true },
+        tokenHash: { equals: token },
+      },
     })
 
     if (!match?.docs?.length) {
       return {
-        error: 'token_not_found',
         details: `Token hash ${token.substring(0, 8)}... not found in collection or token is inactive`,
+        error: 'token_not_found',
       }
     }
 
@@ -381,8 +385,8 @@ const verifyToken = async (
       const exp = new Date(doc.expiresAt)
       if (Number.isFinite(exp.getTime()) && exp.getTime() < Date.now()) {
         return {
-          error: 'token_expired',
           details: `Token expired at ${doc.expiresAt}`,
+          error: 'token_expired',
         }
       }
     }
@@ -410,20 +414,20 @@ const verifyToken = async (
     const userRole = doc.user?.role || undefined
 
     return {
-      token,
-      scopes: resolvedScopes,
       clientId: String(doc.id),
       extra: {
+        role: userRole,
         tokenId: String(doc.id),
         userId: userId ? String(userId) : undefined,
-        role: userRole,
       },
+      scopes: resolvedScopes,
+      token,
     }
   } catch (e) {
     console.warn('[MCP] token verification failed', e)
     return {
-      error: 'verification_error',
       details: `Token verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      error: 'verification_error',
     }
   }
 }
@@ -446,8 +450,8 @@ export const authHandler =
             error_description: 'No authorization provided',
           }),
           {
-            status: 401,
             headers: { 'Content-Type': 'application/json' },
+            status: 401,
           },
         )
       }
@@ -460,17 +464,17 @@ export const authHandler =
             error_description: auth.details,
           }),
           {
-            status: 401,
             headers: { 'Content-Type': 'application/json' },
+            status: 401,
           },
         )
       }
 
       const ctx = {
+        scopes: auth?.scopes || [],
         tokenId: (auth?.extra as any)?.tokenId,
         userId: (auth?.extra as any)?.userId,
         userRole: (auth?.extra as any)?.role,
-        scopes: auth?.scopes || [],
       }
       return await runWithAuthContext(ctx, () => _handler(req))
     } catch (error) {
@@ -481,8 +485,8 @@ export const authHandler =
           error_description: 'Internal server error',
         }),
         {
-          status: 500,
           headers: { 'Content-Type': 'application/json' },
+          status: 500,
         },
       )
     }

@@ -1,0 +1,31 @@
+{
+  "functions": {
+    "app/api/mcp/[...path]/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "MCP_API_KEY": "@mcp-api-key",
+    "DATABASE_URI": "@database-uri",
+    "PAYLOAD_SECRET": "@payload-secret"
+  },
+  "headers": [
+    {
+      "source": "/api/mcp/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
+}

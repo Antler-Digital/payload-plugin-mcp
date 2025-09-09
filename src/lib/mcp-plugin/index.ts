@@ -1,39 +1,41 @@
-import type { Config, CollectionConfig } from 'payload'
-import { authHandler, getMcpRequestHandler } from './mcp.js'
-import { getRegisteredTools } from './mcp.js'
+import type { CollectionConfig, Config } from 'payload'
+
 import type { PayloadPluginMcpConfig } from './types/index.js'
+
 import { McpTokens } from './collections/index.js'
+import { authHandler, getMcpRequestHandler, getRegisteredTools  } from './mcp.js'
 
 export const PayloadPluginMcp =
   (pluginOptions: PayloadPluginMcpConfig) =>
   (config: Config): Config => {
-    const options: Required<Omit<PayloadPluginMcpConfig, 'collections'>> & {
+    const options: {
       collections: PayloadPluginMcpConfig['collections']
       globals: NonNullable<PayloadPluginMcpConfig['globals']>
-    } = {
+    } & Required<Omit<PayloadPluginMcpConfig, 'collections'>> = {
       apiKey: pluginOptions.apiKey || process.env.MCP_API_KEY || '',
       collections: pluginOptions.collections || 'all',
-      globals: pluginOptions.globals || 'all',
       defaultOperations: {
-        list: true,
-        get: true,
         create: false,
-        update: false,
         delete: false,
+        get: true,
+        list: true,
+        update: false,
         ...pluginOptions.defaultOperations,
       },
+      globals: pluginOptions.globals || 'all',
 
       media: {
         enableChunking: false,
         ...(pluginOptions.media || {}),
       },
+      richText: {
+        truncateInList: 200,
+        ...(pluginOptions.richText || {}),
+      },
       tokens: {
         slug: pluginOptions.tokens?.slug || 'mcp-tokens',
+        access: pluginOptions.tokens?.access || {},
         admin: {
-          label: pluginOptions.tokens?.admin?.label || 'MCP API Tokens',
-          description:
-            pluginOptions.tokens?.admin?.description ||
-            'MCP API tokens. User-linked tokens impersonate the user; service/admin tokens use scopes only.',
           defaultColumns: pluginOptions.tokens?.admin?.defaultColumns || [
             'label',
             'user',
@@ -41,12 +43,11 @@ export const PayloadPluginMcp =
             'active',
             'expiresAt',
           ],
+          description:
+            pluginOptions.tokens?.admin?.description ||
+            'MCP API tokens. User-linked tokens impersonate the user; service/admin tokens use scopes only.',
+          label: pluginOptions.tokens?.admin?.label || 'MCP API Tokens',
         },
-        access: pluginOptions.tokens?.access || {},
-      },
-      richText: {
-        truncateInList: 200,
-        ...(pluginOptions.richText || {}),
       },
     }
 
@@ -57,7 +58,7 @@ export const PayloadPluginMcp =
       )
     }
 
-    if (!config.collections) config.collections = []
+    if (!config.collections) {config.collections = []}
 
     if (!config.endpoints) {
       config.endpoints = []
@@ -74,17 +75,13 @@ export const PayloadPluginMcp =
     // Install plugin-scoped Tokens collection if not already present in project
     const tokensSlug = options.tokens.slug || 'mcp-tokens'
     const alreadyHasTokens = (config.collections || []).some(
-      (c) => (c as CollectionConfig)?.slug === tokensSlug,
+      (c) => (c)?.slug === tokensSlug,
     )
     if (!alreadyHasTokens) {
       // Create a copy of the McpTokens collection with custom configuration
       const TokensCollection: CollectionConfig = {
         ...McpTokens,
         slug: tokensSlug,
-        admin: {
-          ...McpTokens.admin,
-          ...(options.tokens.admin || {}),
-        },
         access: {
           ...McpTokens.access,
           // Only override access controls if explicitly provided in plugin options
@@ -104,6 +101,10 @@ export const PayloadPluginMcp =
             admin: options.tokens.access.admin as any,
           }),
         },
+        admin: {
+          ...McpTokens.admin,
+          ...(options.tokens.admin || {}),
+        },
       }
       config.collections?.push(TokensCollection)
     }
@@ -115,18 +116,18 @@ export const PayloadPluginMcp =
         getMcpRequestHandler(req.payload, config, options)
         return new Response(
           JSON.stringify({
-            status: 'ok',
             endpoint: '/plugin/mcp',
-            transport: 'HTTP',
             methods: ['POST'],
+            status: 'ok',
             tools: getRegisteredTools(),
+            transport: 'HTTP',
           }),
           {
-            status: 200,
             headers: {
-              'Content-Type': 'application/json',
               'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
             },
+            status: 200,
           },
         )
       },
@@ -137,9 +138,9 @@ export const PayloadPluginMcp =
     config.endpoints.push({
       handler(req) {
         const request = new Request(req.url || '', {
-          method: req.method,
-          headers: req.headers,
           body: req.body,
+          headers: req.headers,
+          method: req.method,
           ...(req.body ? { duplex: 'half' } : {}),
         })
         const routeHandler = getMcpRequestHandler(req.payload, config, options)
@@ -153,12 +154,12 @@ export const PayloadPluginMcp =
     config.endpoints.push({
       handler() {
         return new Response(null, {
-          status: 204,
           headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+            'Access-Control-Allow-Origin': '*',
           },
+          status: 204,
         })
       },
       method: 'options',

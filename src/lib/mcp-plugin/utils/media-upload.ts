@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BasePayload } from 'payload'
-import { CollectionSlug } from 'payload'
+import type { CollectionSlug } from 'payload'
+
 import { getAuthContext } from '../auth-context.js'
 
 /**
@@ -42,13 +43,13 @@ const chunkStore = new Map<
   string,
   {
     chunks: Buffer[]
+    createdAt: number
     metadata: {
+      expectedChunks: number
       filename: string
       mimeType: string
       totalSize: number
-      expectedChunks: number
     }
-    createdAt: number
   }
 >()
 
@@ -78,34 +79,34 @@ if (IS_SERVERLESS) {
 }
 
 export interface MediaUploadOptions {
+  /** Additional fields for the media document */
+  additionalData?: Record<string, any>
+  alt: string
   /** Base64 encoded file data (for small files < 3MB) */
   base64Data?: string
-  /** URL to download the file from */
-  url?: string
   /** Chunk data for large file uploads */
   chunkData?: {
-    uploadId: string
     chunkIndex: number
-    totalChunks: number
     data: string // Base64 encoded chunk
+    totalChunks: number
+    uploadId: string
   }
   /** File metadata */
   filename: string
-  mimeType: string
-  alt: string
-  /** Additional fields for the media document */
-  additionalData?: Record<string, any>
   /** File size in bytes (required for validation) */
   fileSize?: number
+  mimeType: string
+  /** URL to download the file from */
+  url?: string
 }
 
 export interface MediaUploadResult {
-  success: boolean
-  id?: string
-  url?: string
-  sizes?: Record<string, { url: string; width?: number; height?: number }>
   error?: string
+  id?: string
+  sizes?: Record<string, { height?: number; url: string; width?: number }>
+  success: boolean
   uploadId?: string // For chunked uploads
+  url?: string
 }
 
 /**
@@ -122,18 +123,18 @@ export function getMaxFileSize(config: any): number {
 export function validateFileSize(
   size: number,
   config: any,
-): { valid: boolean; maxSize: number; error?: string } {
+): { error?: string; maxSize: number; valid: boolean } {
   const maxSize = getMaxFileSize(config)
 
   if (size > maxSize) {
     return {
-      valid: false,
-      maxSize,
       error: `File size ${(size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size of ${(maxSize / 1024 / 1024).toFixed(2)}MB`,
+      maxSize,
+      valid: false,
     }
   }
 
-  return { valid: true, maxSize }
+  return { maxSize, valid: true }
 }
 
 /**
@@ -143,13 +144,13 @@ export function determineUploadStrategy(
   fileSize: number,
   config: any,
   opts?: { enableChunking?: boolean },
-): { strategy: 'direct' | 'url' | 'chunked'; reason: string; recommendedChunkSize?: number } {
+): { reason: string; recommendedChunkSize?: number; strategy: 'chunked' | 'direct' | 'url' } {
   const maxSize = getMaxFileSize(config)
 
   if (fileSize > maxSize) {
     return {
-      strategy: 'url',
       reason: 'File exceeds PayloadCMS upload limit; use URL-based upload',
+      strategy: 'url',
     }
   }
 
@@ -161,22 +162,22 @@ export function determineUploadStrategy(
 
   if (base64Size <= MCP_SAFE_MESSAGE_SIZE) {
     return {
-      strategy: 'direct',
       reason: 'File is small enough for direct base64 upload',
+      strategy: 'direct',
     }
   }
 
   if (opts?.enableChunking) {
     return {
-      strategy: 'chunked',
       reason: 'File requires chunked upload due to MCP message size limits',
       recommendedChunkSize: MCP_CHUNK_SIZE,
+      strategy: 'chunked',
     }
   }
 
   return {
-    strategy: 'url',
     reason: 'File requires URL-based upload due to MCP message size limits and chunking disabled',
+    strategy: 'url',
   }
 }
 
@@ -190,12 +191,12 @@ function calculateBase64Size(originalSize: number): number {
 /**
  * Decode a base64 data URL or raw base64 string
  */
-function decodeBase64(data: string): { buffer: Buffer; mimeType: string; filename?: string } {
+function decodeBase64(data: string): { buffer: Buffer; filename?: string; mimeType: string } {
   try {
     if (data.startsWith('data:')) {
       // Data URL format: data:[<mediatype>][;base64],<data>
       const match = data.match(/^data:(.*?);base64,(.*)$/)
-      if (!match) throw new Error('Invalid data URL format')
+      if (!match) {throw new Error('Invalid data URL format')}
       const mimeType = match[1]
       const base64Data = match[2]
       const buffer = Buffer.from(base64Data, 'base64')
@@ -215,7 +216,7 @@ function decodeBase64(data: string): { buffer: Buffer; mimeType: string; filenam
  */
 async function downloadFromUrl(
   url: string,
-): Promise<{ buffer: Buffer; mimeType: string; filename?: string }> {
+): Promise<{ buffer: Buffer; filename?: string; mimeType: string }> {
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to download file from URL: ${response.status} ${response.statusText}`)
@@ -230,7 +231,7 @@ async function downloadFromUrl(
     filename = contentDisposition.split('filename=')[1]?.replace(/"/g, '')
   }
 
-  return { buffer, mimeType, filename }
+  return { buffer, filename, mimeType }
 }
 
 /**
@@ -245,7 +246,7 @@ export async function uploadMedia(
   const auth = getAuthContext()
   const scopes = auth?.scopes || []
   if (!scopes.includes('collections:*:*') && !scopes.includes('media:upload')) {
-    return { success: false, error: 'MCP token lacks media:upload scope' }
+    return { error: 'MCP token lacks media:upload scope', success: false }
   }
   try {
     let fileBuffer: Buffer
@@ -263,34 +264,34 @@ export async function uploadMedia(
       const downloaded = await downloadFromUrl(options.url)
       fileBuffer = downloaded.buffer
       actualMimeType = downloaded.mimeType || actualMimeType
-      if (downloaded.filename) actualFilename = downloaded.filename
+      if (downloaded.filename) {actualFilename = downloaded.filename}
       actualSize = fileBuffer.length
     } else if (options.chunkData) {
       // Chunked upload
       if (!opts?.enableChunking) {
         return {
-          success: false,
           error:
             'Chunked upload not enabled. Set media.enableChunking: true in MCP plugin config if you understand serverless limitations.',
+          success: false,
         }
       }
 
-      const { uploadId, chunkIndex, totalChunks, data } = options.chunkData
+      const { chunkIndex, data, totalChunks, uploadId } = options.chunkData
       if (!uploadId || totalChunks <= 0) {
-        return { success: false, error: 'Invalid chunk metadata' }
+        return { error: 'Invalid chunk metadata', success: false }
       }
 
       // Initialize chunk store
       if (!chunkStore.has(uploadId)) {
         chunkStore.set(uploadId, {
           chunks: new Array(totalChunks).fill(null),
+          createdAt: Date.now(),
           metadata: {
+            expectedChunks: totalChunks,
             filename: actualFilename,
             mimeType: actualMimeType,
             totalSize: options.fileSize || 0,
-            expectedChunks: totalChunks,
           },
-          createdAt: Date.now(),
         })
       }
 
@@ -316,8 +317,8 @@ export async function uploadMedia(
       actualSize = fileBuffer.length
     } else {
       return {
-        success: false,
         error: 'No upload data provided (base64Data, url, or chunkData required)',
+        success: false,
       }
     }
 
@@ -325,8 +326,8 @@ export async function uploadMedia(
     const sizeValidation = validateFileSize(actualSize, config)
     if (!sizeValidation.valid) {
       return {
-        success: false,
         error: sizeValidation.error,
+        success: false,
       }
     }
 
@@ -342,8 +343,8 @@ export async function uploadMedia(
 
     if (!isAllowedType) {
       return {
-        success: false,
         error: `File type ${actualMimeType} is not allowed. Allowed types: ${allowedMimeTypes.join(', ')}`,
+        success: false,
       }
     }
 
@@ -357,9 +358,9 @@ export async function uploadMedia(
     // Create a mock file object for the Local API
     // PayloadCMS expects file data in a specific format for programmatic uploads
     const file = {
+      name: actualFilename,
       data: fileBuffer,
       mimetype: actualMimeType,
-      name: actualFilename,
       size: actualSize,
     }
 
@@ -371,11 +372,11 @@ export async function uploadMedia(
       file,
       // Pass a mock request to trigger hooks (for revalidation)
       req: {
-        payload,
         context: {
           fromMCP: true,
           triggerAfterChange: true,
         },
+        payload,
       } as any,
     } as any)
 
@@ -390,17 +391,17 @@ export async function uploadMedia(
     }
 
     return {
-      success: true,
       id: result.id.toString(),
-      url: 'url' in result ? (result as any).url : undefined,
-      sizes,
       error: undefined,
+      sizes,
+      success: true,
+      url: 'url' in result ? (result as any).url : undefined,
     }
   } catch (error) {
     console.error('[MCP] Media upload error:', error)
     return {
-      success: false,
       error: error instanceof Error ? error.message : 'Unknown upload error',
+      success: false,
     }
   }
 }
@@ -424,17 +425,17 @@ export function createMediaUploadTools() {
       outputSchema: {
         type: 'object',
         properties: {
-          valid: { type: 'boolean' },
-          maxSize: { type: 'number' },
           error: { type: 'string' },
+          maxSize: { type: 'number' },
           recommendedStrategy: {
             type: 'object',
             properties: {
-              strategy: { type: 'string', enum: ['direct', 'url', 'chunked'] },
               reason: { type: 'string' },
               recommendedChunkSize: { type: 'number' },
+              strategy: { type: 'string', enum: ['direct', 'url', 'chunked'] },
             },
           },
+          valid: { type: 'boolean' },
         },
       },
     },
@@ -445,34 +446,34 @@ export function createMediaUploadTools() {
       inputSchema: {
         type: 'object',
         properties: {
+          additionalData: { type: 'object', additionalProperties: true },
+          alt: { type: 'string' },
           base64Data: { type: 'string' },
-          url: { type: 'string' },
           chunkData: {
             type: 'object',
             properties: {
-              uploadId: { type: 'string' },
               chunkIndex: { type: 'number' },
-              totalChunks: { type: 'number' },
               data: { type: 'string' },
+              totalChunks: { type: 'number' },
+              uploadId: { type: 'string' },
             },
           },
           filename: { type: 'string' },
-          mimeType: { type: 'string' },
-          alt: { type: 'string' },
-          additionalData: { type: 'object', additionalProperties: true },
           fileSize: { type: 'number' },
+          mimeType: { type: 'string' },
+          url: { type: 'string' },
         },
         required: ['filename', 'mimeType', 'alt'],
       },
       outputSchema: {
         type: 'object',
         properties: {
-          success: { type: 'boolean' },
           id: { type: 'string' },
-          url: { type: 'string' },
-          sizes: { type: 'object', additionalProperties: true },
           error: { type: 'string' },
+          sizes: { type: 'object', additionalProperties: true },
+          success: { type: 'boolean' },
           uploadId: { type: 'string' },
+          url: { type: 'string' },
         },
       },
     },
@@ -483,27 +484,27 @@ export function createMediaUploadTools() {
       inputSchema: {
         type: 'object',
         properties: {
-          uploadId: { type: 'string' },
+          additionalData: { type: 'object', additionalProperties: true },
+          alt: { type: 'string' },
           chunkIndex: { type: 'number' },
-          totalChunks: { type: 'number' },
           data: { type: 'string' },
           filename: { type: 'string' },
-          mimeType: { type: 'string' },
-          alt: { type: 'string' },
-          additionalData: { type: 'object', additionalProperties: true },
           fileSize: { type: 'number' },
+          mimeType: { type: 'string' },
+          totalChunks: { type: 'number' },
+          uploadId: { type: 'string' },
         },
         required: ['uploadId', 'chunkIndex', 'totalChunks', 'data', 'filename', 'mimeType', 'alt'],
       },
       outputSchema: {
         type: 'object',
         properties: {
-          success: { type: 'boolean' },
           id: { type: 'string' },
-          url: { type: 'string' },
-          sizes: { type: 'object', additionalProperties: true },
           error: { type: 'string' },
+          sizes: { type: 'object', additionalProperties: true },
+          success: { type: 'boolean' },
           uploadId: { type: 'string' },
+          url: { type: 'string' },
         },
       },
     },

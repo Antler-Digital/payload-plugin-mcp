@@ -1,13 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { SanitizedConfig } from 'payload'
-import type { CollectionAnalysis } from '../types/index.js'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { SanitizedConfig } from 'payload'
+
+import type { CollectionAnalysis } from '../types/index.js'
 
 let cachedEditorConfig: any | null = null
 let cachedRichTextModule: any | null = null
 
 async function getRichTextModule() {
-  if (cachedRichTextModule) return cachedRichTextModule
+  if (cachedRichTextModule) {return cachedRichTextModule}
   cachedRichTextModule = await import('@payloadcms/richtext-lexical')
   return cachedRichTextModule
 }
@@ -17,15 +19,15 @@ async function getEditorConfig({
 }: {
   payloadConfig: SanitizedConfig
 }): Promise<any> {
-  if (cachedEditorConfig) return cachedEditorConfig
+  if (cachedEditorConfig) {return cachedEditorConfig}
   const richtext = await getRichTextModule()
-  const factory = (richtext as any).editorConfigFactory
-  if (!factory) throw new Error('editorConfigFactory not found in @payloadcms/richtext-lexical')
+  const factory = (richtext).editorConfigFactory
+  if (!factory) {throw new Error('editorConfigFactory not found in @payloadcms/richtext-lexical')}
 
   // const payloadConfig = (await import('@payload-config')).default
 
   const editorConfigFactory = typeof factory?.default === 'function' ? factory.default : factory
-  cachedEditorConfig = await editorConfigFactory({ config: await payloadConfig })
+  cachedEditorConfig = editorConfigFactory({ config: await payloadConfig })
   return cachedEditorConfig
 }
 
@@ -35,11 +37,11 @@ export async function markdownToLexical(
 ): Promise<SerializedEditorState> {
   const richtext = await getRichTextModule()
   const editorConfig = await getEditorConfig({ payloadConfig })
-  const convert = (richtext as any).convertMarkdownToLexical
+  const convert = (richtext).convertMarkdownToLexical
   if (typeof convert !== 'function') {
     throw new Error('convertMarkdownToLexical function not found in @payloadcms/richtext-lexical')
   }
-  return await convert({ markdown, editorConfig })
+  return await convert({ editorConfig, markdown })
 }
 
 export async function lexicalToMarkdown(
@@ -48,7 +50,7 @@ export async function lexicalToMarkdown(
 ): Promise<string> {
   const richtext = await getRichTextModule()
   const editorConfig = await getEditorConfig({ payloadConfig })
-  const convert = (richtext as any).convertLexicalToMarkdown
+  const convert = (richtext).convertLexicalToMarkdown
   if (typeof convert !== 'function') {
     throw new Error('convertLexicalToMarkdown function not found in @payloadcms/richtext-lexical')
   }
@@ -59,7 +61,7 @@ function getValueAtPath(obj: any, path: string): any {
   const parts = path.split('.')
   let current = obj
   for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined
+    if (current == null || typeof current !== 'object') {return undefined}
     current = current[part]
   }
   return current
@@ -87,10 +89,10 @@ export async function convertMarkdownFieldsToLexicalForData(
   analysis: CollectionAnalysis,
   payloadConfig: SanitizedConfig,
 ): Promise<Record<string, unknown>> {
-  if (!data || typeof data !== 'object') return data
+  if (!data || typeof data !== 'object') {return data}
 
   const richTextFields = analysis.fields.filter((f) => f.type === 'richText')
-  if (richTextFields.length === 0) return data
+  if (richTextFields.length === 0) {return data}
 
   const updated: Record<string, unknown> = { ...(data as any) }
 
@@ -127,12 +129,12 @@ export async function attachMarkdownFromLexicalInResult(
   isListOperation: boolean = false,
 ): Promise<any> {
   const richTextFields = analysis.fields.filter((f) => f.type === 'richText')
-  if (richTextFields.length === 0 && (result == null || typeof result !== 'object')) return result
+  if (richTextFields.length === 0 && (result == null || typeof result !== 'object')) {return result}
 
   const truncateInList = options?.truncateInList ?? 0
 
   async function replaceOnDoc(doc: any) {
-    if (!doc || typeof doc !== 'object') return doc
+    if (!doc || typeof doc !== 'object') {return doc}
 
     // Targeted conversion for known richText fields on this collection
     for (const field of richTextFields) {

@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import type { CollectionAnalysis } from '../../types/index.js'
 
 // Import the functions we want to test
@@ -8,9 +10,9 @@ import type { CollectionAnalysis } from '../../types/index.js'
 
 // Mock the richtext module
 vi.mock('@payloadcms/richtext-lexical', () => ({
-  editorConfigFactory: vi.fn(),
-  convertMarkdownToLexical: vi.fn(),
   convertLexicalToMarkdown: vi.fn(),
+  convertMarkdownToLexical: vi.fn(),
+  editorConfigFactory: vi.fn(),
 }))
 
 // Mock the payload config import
@@ -22,47 +24,49 @@ describe('richtext utilities', () => {
   const mockCollectionAnalysis: CollectionAnalysis = {
     slug: 'posts',
     // @ts-ignore
-    operations: { list: true, get: true, create: true, update: true, delete: true },
     fields: [
       {
         name: 'title',
         type: 'text',
-        required: true,
         hasDefault: false,
+        required: true,
       },
       {
         name: 'content',
         type: 'richText',
-        required: false,
         hasDefault: false,
+        required: false,
       },
       {
         name: 'excerpt',
         type: 'richText',
-        required: false,
         hasDefault: false,
+        required: false,
       },
     ],
     isGlobal: false,
+    // @ts-expect-error - operations is added by the plugin
+    operations: { create: true, delete: true, get: true, list: true, update: true },
   }
 
   const mockLexicalState: SerializedEditorState = {
     root: {
+      type: 'root',
       children: [
         {
           // @ts-ignore
-          children: [{ text: 'Test content' }],
+          type: 'paragraph',
+          // @ts-ignore
+          children: [{ text: 'Test content' } as any],
           direction: 'ltr',
           format: '',
           indent: 0,
-          type: 'paragraph',
           version: 1,
         },
       ],
       direction: 'ltr',
       format: '',
       indent: 0,
-      type: 'root',
       version: 1,
     },
   }
@@ -139,12 +143,12 @@ describe('richtext utilities', () => {
       const analysisWithoutRichText = {
         ...mockCollectionAnalysis,
         fields: [
-          { name: 'title', type: 'text', required: true, hasDefault: false },
-          { name: 'author', type: 'relationship', required: true, hasDefault: false },
+          { name: 'title', type: 'text', hasDefault: false, required: true },
+          { name: 'author', type: 'relationship', hasDefault: false, required: true },
         ],
       }
 
-      const testData = { title: 'Test Title', author: 'user123' }
+      const testData = { author: 'user123', title: 'Test Title' }
 
       // We can't easily test this without mocking the markdown conversion
       // This would be better tested in integration tests or with proper mocking

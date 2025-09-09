@@ -1,33 +1,36 @@
-import { describe, it, expect, vi } from 'vitest'
-import { buildInputZodShape } from '../zod-schema.js'
+import { describe, expect, it, vi } from 'vitest'
+
 import type { CollectionAnalysis, FieldAnalysis } from '../../types/index.js'
+
+import { buildInputZodShape } from '../zod-schema.js'
 
 describe('zod-schema', () => {
   const mockCollectionAnalysis: CollectionAnalysis = {
     slug: 'posts',
     // @ts-ignore
-    operations: { list: true, get: true, create: true, update: true, delete: true },
     fields: [
       {
         name: 'title',
         type: 'text',
-        required: true,
         hasDefault: false,
+        required: true,
       } as FieldAnalysis,
       {
         name: 'content',
         type: 'richText',
-        required: false,
         hasDefault: false,
+        required: false,
       } as FieldAnalysis,
       {
         name: 'author',
         type: 'relationship',
-        required: true,
         hasDefault: false,
+        required: true,
       } as FieldAnalysis,
     ],
     isGlobal: false,
+    // @ts-expect-error - operations is added by the plugin
+    operations: { create: true, delete: true, get: true, list: true, update: true },
   }
 
   const mockGlobalAnalysis: CollectionAnalysis = {
