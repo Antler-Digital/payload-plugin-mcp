@@ -69,7 +69,7 @@ export default function TroubleshootingPage() {
           <div className="bg-gray-900 text-green-400 p-4 rounded-lg mb-4">
             <pre className="text-sm">
               {`// Ensure proper import
-import { PayloadPluginMcp } from 'payloadcms-mcp-plugin'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 
 // Check plugin configuration
 export default buildConfig({
@@ -90,7 +90,7 @@ export default buildConfig({
             <li>Check browser console for errors</li>
             <li>Verify plugin appears in PayloadCMS admin</li>
             <li>
-              Test MCP endpoint at <code>/plugin/mcp</code>
+              Test MCP endpoint at <code>/api/plugin/mcp</code>
             </li>
           </ul>
 
@@ -106,7 +106,7 @@ export default buildConfig({
             <li>Verify the plugin is properly configured</li>
             <li>Check that the server is running on the correct port</li>
             <li>
-              Ensure the endpoint path is correct: <code>/plugin/mcp</code>
+              Ensure the endpoint path is correct: <code>/api/plugin/mcp</code>
             </li>
           </ul>
 
@@ -152,7 +152,7 @@ export default buildConfig({
           </p>
           <div className="bg-gray-100 p-4 rounded-lg mb-4">
             <code className="block bg-white p-2 rounded">
-              curl -H "Authorization: Bearer your-api-key" http://localhost:3001/plugin/mcp
+              curl -H "Authorization: Bearer your-api-key" http://localhost:3000/api/plugin/mcp
             </code>
           </div>
 
@@ -216,6 +216,29 @@ export default buildConfig({
             <li>Ensure database connection is working</li>
           </ul>
 
+          <h3>3. MCP Inspector Connection Issues</h3>
+          <p>
+            <strong>Symptoms</strong>: Can't connect to MCP server using the inspector
+          </p>
+
+          <p>
+            <strong>Solutions</strong>:
+          </p>
+          <ul>
+            <li>
+              Use the correct endpoint: <code>http://localhost:3000/api/plugin/mcp</code>
+            </li>
+            <li>Ensure the server is running before starting the inspector</li>
+            <li>Check that the Authorization header is properly formatted</li>
+            <li>Verify there are no CORS issues</li>
+          </ul>
+
+          <div className="bg-gray-100 p-4 rounded-lg mb-4">
+            <code className="block bg-white p-2 rounded">
+              npx @modelcontextprotocol/inspector http://localhost:3000/api/plugin/mcp
+            </code>
+          </div>
+
           <h2 id="performance-issues">Performance Issues</h2>
 
           <h3>1. Slow Response Times</h3>
@@ -261,6 +284,9 @@ export default buildConfig({
             <li>Ensure environment variables are set in Vercel</li>
             <li>Check that the plugin is included in the build</li>
             <li>Verify the API route is properly configured</li>
+            <li>
+              Use the correct production endpoint: <code>/api/plugin/mcp</code>
+            </li>
           </ul>
 
           <h3>2. Environment Variables</h3>

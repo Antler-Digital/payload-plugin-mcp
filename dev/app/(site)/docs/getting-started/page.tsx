@@ -109,7 +109,7 @@ export default buildConfig({
               {`✅ PayloadCMS MCP Plugin initialized
 🔧 Collections exposed: posts, users, media
 🛠️  Tools generated: 6
-🌐 MCP HTTP server: http://0.0.0.0:3001/plugin/mcp
+🌐 MCP HTTP server: http://0.0.0.0:3000/api/plugin/mcp
 🔐 Authentication: Enabled
    📋 posts: list, get
    📋 users: list, get
@@ -122,7 +122,7 @@ export default buildConfig({
 
           <div className="bg-gray-100 p-4 rounded-lg mb-4">
             <code className="block bg-white p-2 rounded">
-              curl -H "Authorization: Bearer your-api-key" http://localhost:3001/plugin/mcp
+              curl -H "Authorization: Bearer your-api-key" http://localhost:3000/api/plugin/mcp
             </code>
           </div>
 
@@ -130,6 +130,27 @@ export default buildConfig({
             You should receive a response with information about available tools and the server
             status.
           </p>
+
+          <h2>Test with MCP Inspector</h2>
+          <p>Use the MCP Inspector to test your server:</p>
+
+          <div className="bg-gray-100 p-4 rounded-lg mb-4">
+            <code className="block bg-white p-2 rounded">
+              npx @modelcontextprotocol/inspector http://localhost:3000/api/plugin/mcp
+            </code>
+          </div>
+
+          <p>
+            This will open the MCP Inspector at <code>http://localhost:6274</code> where you can:
+          </p>
+          <ul>
+            <li>
+              Enter your Authorization header (<code>Bearer your-api-key</code>)
+            </li>
+            <li>Test MCP tool execution</li>
+            <li>Explore available tools and their schemas</li>
+            <li>Debug connection issues</li>
+          </ul>
 
           <h2>Next Steps</h2>
           <ul>
