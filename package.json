@@ -143,6 +143,7 @@
     "node": "^18.20.2 || >=20.9.0 || >=22.0.0"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "import": "./dist/exports/index.js",
