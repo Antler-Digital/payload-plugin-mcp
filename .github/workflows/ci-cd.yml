@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [main, staging]
     types: [opened, synchronize, reopened]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
