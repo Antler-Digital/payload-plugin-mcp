@@ -1,14 +1,12 @@
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
 import type { BasePayload, Config } from 'payload'
 
-import crypto from 'crypto'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createMcpHandler } from 'mcp-handler'
 import { z } from 'zod'
 
 import type { PayloadPluginMcpConfig } from './types/index.js'
-import type {
-  MediaUploadOptions} from './utils/media-upload.js';
+import type { MediaUploadOptions } from './utils/media-upload.js'
 
 import { runWithAuthContext } from './auth-context.js'
 
@@ -22,7 +20,7 @@ import {
   createMediaUploadTools,
   determineUploadStrategy,
   uploadMedia,
-  validateFileSize
+  validateFileSize,
 } from './utils/media-upload.js'
 import { executeTool, generateToolDescriptors } from './utils/tool-generator.js'
 import { buildInputZodShape } from './utils/zod-schema.js'
@@ -48,7 +46,9 @@ export const getMcpRequestHandler = (
   config: Config,
   options: PayloadPluginMcpConfig,
 ) => {
-  if (cachedRouteHandler && cachedInitialized) {return cachedRouteHandler}
+  if (cachedRouteHandler && cachedInitialized) {
+    return cachedRouteHandler
+  }
   payloadInstance = payload
 
   // Precompute and expose tool list for discovery endpoints even before the
@@ -128,10 +128,15 @@ export const getMcpRequestHandler = (
           const schemaShape = Object.entries((tool as any).inputSchema.properties || {}).reduce(
             (acc, [key, value]: [string, any]) => {
               let fieldSchema: any = z.any()
-              if (value.type === 'string') {fieldSchema = z.string()}
-              else if (value.type === 'number') {fieldSchema = z.number()}
-              else if (value.type === 'boolean') {fieldSchema = z.boolean()}
-              else if (value.type === 'object') {fieldSchema = z.record(z.any(), z.any())}
+              if (value.type === 'string') {
+                fieldSchema = z.string()
+              } else if (value.type === 'number') {
+                fieldSchema = z.number()
+              } else if (value.type === 'boolean') {
+                fieldSchema = z.boolean()
+              } else if (value.type === 'object') {
+                fieldSchema = z.record(z.any(), z.any())
+              }
 
               // Make optional if not in required array
               const required = (tool as any).inputSchema.required || []
@@ -210,9 +215,13 @@ export const getMcpRequestHandler = (
 
         // Regular tool registration for non-media tools
         const analysis = analyses.find((c) => c.slug === (tool as any).collection)
-        if (!analysis) {return}
+        if (!analysis) {
+          return
+        }
         // Skip utility operations as they don't have standard CRUD operations
-        if ((tool as any).operation === 'utility') {return}
+        if ((tool as any).operation === 'utility') {
+          return
+        }
         const paramsShape = buildInputZodShape(analysis, (tool as any).operation)
 
         server.tool(
@@ -225,7 +234,9 @@ export const getMcpRequestHandler = (
             const redactKeys = ['password', 'token', 'apiKey', 'secret', 'resetToken']
             if (redacted && typeof redacted === 'object') {
               for (const key of redactKeys) {
-                if (key in redacted) {(redacted)[key] = '***'}
+                if (key in redacted) {
+                  redacted[key] = '***'
+                }
               }
               if ('data' in redacted && redacted.data && typeof redacted.data === 'object') {
                 for (const key of redactKeys) {
@@ -345,7 +356,6 @@ const verifyToken = async (
       }
     }
 
-    // Support legacy env key for emergencies
     if (process.env.MCP_API_KEY && token === process.env.MCP_API_KEY) {
       return {
         clientId: 'env-key',
@@ -362,7 +372,7 @@ const verifyToken = async (
         error: 'payload_instance_missing',
       }
     }
-    const match = await (payloadInstance).find({
+    const match = await payloadInstance.find({
       collection: (globalThis as any).__MCP_TOKEN_SLUG__ || 'mcp-tokens',
       depth: 0,
       where: {

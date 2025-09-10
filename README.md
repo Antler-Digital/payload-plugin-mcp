@@ -6,11 +6,10 @@ A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) s
 
 - 🚀 **Automatic Tool Generation**: Generates MCP tools for all PayloadCMS collections
 - 🔐 **API Key Authentication**: Secure authentication using environment variables
-- 🌐 **Multiple Transport Options**: Supports both HTTP/SSE and stdio transports
+- 🌐 **HTTP Transport**: Reliable HTTP-based MCP communication
 - ☁️ **Vercel Ready**: Optimized for serverless deployment
 - 🛠️ **Comprehensive Operations**: List, get, create, update, and delete operations
 - 📊 **Rich JSON Schemas**: Automatically generated schemas from collection fields
-- 🔄 **Real-time Updates**: SSE support for real-time communication
 - 📝 **Full Claude Desktop Integration**: Ready to use with Claude Desktop
 - 🎛️ **Per-Collection Control**: Configure operations individually for each collection
 - 🏷️ **Custom Tool Naming**: Custom prefixes and descriptions per collection
@@ -184,8 +183,7 @@ Expected output:
 ✅ PayloadCMS MCP Plugin initialized
 🔧 Collections exposed: posts, users, media
 🛠️  Tools generated: 8
-🌐 MCP HTTP server: http://0.0.0.0:3001/mcp
-📡 SSE endpoint: http://0.0.0.0:3001/mcp/sse
+🌐 MCP HTTP server: http://0.0.0.0:3000/api/plugin/mcp
 🔐 Authentication: Enabled
    📋 posts: list, get
    📋 users: list, get, create, update
@@ -296,9 +294,43 @@ collections: [
 ]
 ```
 
+## HTTP vs SSE: Why We Chose HTTP
+
+This plugin uses **HTTP transport** instead of Server-Sent Events (SSE) for MCP communication. Here's why:
+
+### Comparison Table
+
+| Aspect             | HTTP                            | SSE                             |
+| ------------------ | ------------------------------- | ------------------------------- |
+| **Connection**     | Request/response, stateless     | Persistent, long-lived          |
+| **Data Flow**      | Client requests data            | Server can push data anytime    |
+| **Use Cases**      | Standard CRUD operations        | Real-time updates, streaming    |
+| **Complexity**     | Lower (simple request/response) | Higher (connection management)  |
+| **Performance**    | Better for one-off operations   | Better for frequent updates     |
+| **Serverless**     | Excellent (stateless)           | Challenging (timeout limits)    |
+| **Debugging**      | Easier to debug                 | More complex to troubleshoot    |
+| **PayloadCMS Fit** | Perfect for CMS operations      | Overkill for most CMS use cases |
+
+### Why HTTP is Better for PayloadCMS
+
+1. **CRUD Operations**: Most CMS operations are request/response based
+2. **Serverless Friendly**: Works perfectly with Vercel/Netlify deployments
+3. **Simpler Architecture**: Easier to maintain and debug
+4. **Stateless Design**: Fits well with PayloadCMS's architecture
+5. **Better Performance**: For typical CMS operations, HTTP is more efficient
+
+### SSE Roadmap
+
+**Server-Sent Events support is on our roadmap** and will be added in a future release. SSE will be valuable for:
+
+- Real-time notifications when content is published
+- Live progress updates for bulk operations
+- Streaming responses for large data exports
+- Live collaboration features
+
 ## Claude Desktop Integration
 
-### Method 1: HTTP over SSE (Recommended for hosted servers)
+### Method 1: Production (Hosted Servers)
 
 Add to your `claude_desktop_config.json`:
 
@@ -309,9 +341,14 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "https://your-domain.com/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "https://your-domain.com/api/plugin/mcp",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
@@ -328,24 +365,71 @@ For local development, you can connect directly:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "http://localhost:3001/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "http://localhost:3000/api/plugin/mcp",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
 ```
 
+## Testing Your MCP Server
+
+### 1. Test Tool Listing
+
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+     http://localhost:3000/api/plugin/mcp
+```
+
+### 2. Test Tool Invocation
+
+```bash
+curl -X POST \
+     -H "Authorization: Bearer your-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "jsonrpc": "2.0",
+       "id": 1,
+       "method": "tools/call",
+       "params": {
+         "name": "posts_list",
+         "arguments": {
+           "where": { "status": { "equals": "published" } },
+           "limit": 5
+         }
+       }
+     }' \
+     http://localhost:3000/api/plugin/mcp
+```
+
+### 3. Test with MCP Inspector
+
+Use the MCP Inspector to test your server:
+
+```bash
+npx @modelcontextprotocol/inspector http://localhost:3000/api/plugin/mcp
+```
+
+This will open the MCP Inspector at `http://localhost:6274` where you can:
+
+- Enter your Authorization header (`Bearer your-api-key`)
+- Test MCP tool execution
+- Explore available tools and their schemas
+- Debug connection issues
+
 ## API Endpoints
 
 The plugin creates the following endpoints:
 
-- `GET /mcp/list_tools` - List all available tools
-- `POST /mcp/invoke` - Invoke a specific tool
-- `GET /mcp/schemas/{tool}` - Get tool input/output schemas
-- `GET /mcp/sse` - Server-Sent Events endpoint for HTTP transport
-- `POST /mcp` - JSON-RPC 2.0 endpoint for MCP protocol
-- `GET /health` - Health check endpoint
+- `GET /api/plugin/mcp` - Discovery endpoint (lists available tools)
+- `POST /api/plugin/mcp` - JSON-RPC 2.0 endpoint for MCP protocol
+- `OPTIONS /api/plugin/mcp` - CORS preflight handling
 
 ## Authentication
 
@@ -499,45 +583,17 @@ MCP_API_KEY=your-production-api-key
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "https://your-app.vercel.app/api/mcp/sse?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "https://your-app.vercel.app/api/mcp",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }
-```
-
-## Testing Your MCP Server
-
-### 1. Test Tool Listing
-
-```bash
-curl -H "Authorization: Bearer your-api-key" \
-     http://localhost:3001/mcp/list_tools
-```
-
-### 2. Test Tool Invocation
-
-```bash
-curl -X POST \
-     -H "Authorization: Bearer your-api-key" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "tool": "posts_list",
-       "input": {
-         "where": { "status": { "equals": "published" } },
-         "limit": 5
-       }
-     }' \
-     http://localhost:3001/mcp/invoke
-```
-
-### 3. Test Claude Desktop Connection
-
-Use the MCP Inspector to test your server:
-
-```bash
-npx @modelcontextprotocol/inspector http://localhost:3001/mcp/sse?api_key=your-api-key
 ```
 
 ## Configuration Options
@@ -587,7 +643,7 @@ payloadPluginMcp({
 Check server status:
 
 ```bash
-curl http://localhost:3001/health
+curl http://localhost:3000/api/plugin/mcp
 ```
 
 ## Contributing

@@ -49,7 +49,7 @@ With this configuration, the following tools will be generated:
 
 - `posts_list` - List all posts with filtering and pagination
 - `posts_get` - Get a single post by ID
-- `users_list` - List all users with filtering and pagination  
+- `users_list` - List all users with filtering and pagination
 - `users_get` - Get a single user by ID
 
 ## Testing the MCP Server
@@ -95,9 +95,14 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "http://localhost:3000/plugin/mcp?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "http://localhost:3000/plugin/mcp",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }

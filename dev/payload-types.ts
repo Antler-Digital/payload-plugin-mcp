@@ -123,6 +123,8 @@ export interface UserAuthOperations {
  */
 export interface Post {
   id: string;
+  slug: string;
+  title: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -264,6 +266,8 @@ export interface PayloadMigration {
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
+  slug?: T;
+  title?: T;
   updatedAt?: T;
   createdAt?: T;
 }
