@@ -125,9 +125,14 @@ Once deployed, add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sse",
-        "https://your-app.vercel.app/api/mcp?api_key=your-api-key"
-      ]
+        "mcp-remote",
+        "https://your-app.vercel.app/api/mcp",
+        "--header",
+        "Authorization: Bearer ${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { BasePayload, CollectionConfig, CollectionSlug, Field } from 'payload'
+import type { BasePayload, CollectionConfig, CollectionSlug, Field, SelectType } from 'payload'
 
 import type {
   CollectionAnalysis,
@@ -595,8 +595,12 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
       schema.items = { type: 'object', additionalProperties: true }
       if (field.arrayConstraints) {
         const { maxItems, minItems } = field.arrayConstraints
-        if (typeof minItems === 'number') {schema.minItems = minItems}
-        if (typeof maxItems === 'number') {schema.maxItems = maxItems}
+        if (typeof minItems === 'number') {
+          schema.minItems = minItems
+        }
+        if (typeof maxItems === 'number') {
+          schema.maxItems = maxItems
+        }
       }
       break
     case 'blocks':
@@ -616,10 +620,18 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
       }
       if (field.stringConstraints) {
         const { format, maxLength, minLength, pattern } = field.stringConstraints
-        if (typeof minLength === 'number') {schema.minimum = minLength as any}
-        if (typeof maxLength === 'number') {schema.maximum = maxLength as any}
-        if (pattern) {schema.pattern = pattern as any}
-        if (format) {schema.format = format}
+        if (typeof minLength === 'number') {
+          schema.minimum = minLength as any
+        }
+        if (typeof maxLength === 'number') {
+          schema.maximum = maxLength as any
+        }
+        if (pattern) {
+          schema.pattern = pattern as any
+        }
+        if (format) {
+          schema.format = format
+        }
       }
       break
 
@@ -642,8 +654,12 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
       schema.type = 'number'
       if (field.numberConstraints) {
         const { max, min } = field.numberConstraints
-        if (typeof min === 'number') {schema.minimum = min}
-        if (typeof max === 'number') {schema.maximum = max}
+        if (typeof min === 'number') {
+          schema.minimum = min
+        }
+        if (typeof max === 'number') {
+          schema.maximum = max
+        }
       }
       break
 
@@ -708,6 +724,40 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
   }
 
   return schema
+}
+
+/**
+ * Convert fields array to PayloadCMS select format
+ * PayloadCMS select expects a flat object with field names as keys and true as values
+ */
+function convertFieldsToSelect(fields?: string[] | null, isGlobal = false): SelectType | undefined {
+  if (!fields || fields.length === 0) {
+    return undefined
+  }
+
+  const select: Record<string, true> = {}
+
+  // Process user-specified fields first
+  let hasValidFields = false
+  for (const field of fields) {
+    if (typeof field === 'string' && field.trim() !== '') {
+      const trimmedField = field.trim()
+      // For PayloadCMS select, we use field paths as-is (including dot notation)
+      // PayloadCMS handles nested field selection with dot notation like 'user.email'
+      select[trimmedField] = true
+      hasValidFields = true
+    }
+  }
+
+  // Always include id for collections (but not for globals) unless explicitly excluded
+  // Only add id if user didn't explicitly specify it and we have other valid fields
+  if (!isGlobal && hasValidFields && !select.id) {
+    select.id = true
+  }
+
+  // If no valid fields were specified, return undefined to select all fields
+  // This prevents empty select objects which could cause PayloadCMS to return no data
+  return hasValidFields ? select : undefined
 }
 
 /**
@@ -827,13 +877,17 @@ export async function executeTool(
 
   switch (operation) {
     case 'create':
-      if (analysis.isGlobal) {throw new Error('Create operation is not supported for globals')}
+      if (analysis.isGlobal) {
+        throw new Error('Create operation is not supported for globals')
+      }
       return await (async () => {
         const processedData = await convertMarkdownFieldsToLexicalForData(
           input.data || {},
           analysis,
           payload.config,
         )
+        const select = convertFieldsToSelect(input.fields, false) // Collections are not global
+
         /**
          * CREATE operations trigger:
          * - beforeValidate hooks
@@ -848,6 +902,7 @@ export async function executeTool(
           data: processedData,
           depth: input.depth ?? 0,
           req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
+          ...(select && { select }), // Use PayloadCMS native select for field filtering in response
         })
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
@@ -860,7 +915,9 @@ export async function executeTool(
       })()
 
     case 'delete':
-      if (analysis.isGlobal) {throw new Error('Delete operation is not supported for globals')}
+      if (analysis.isGlobal) {
+        throw new Error('Delete operation is not supported for globals')
+      }
       return await (async () => {
         /**
          * DELETE operations trigger:
@@ -886,12 +943,15 @@ export async function executeTool(
          * - afterRead hooks
          * Performance impact is minimal unless hooks perform heavy operations.
          */
+        const select = convertFieldsToSelect(input.fields, analysis.isGlobal)
+
         const result = analysis.isGlobal
           ? await (payload as any).findGlobal({
               slug: String(collection),
               depth: input.depth ?? 0,
               draft: input.isDraft,
               req: mockReq, // Pass mock request for global operations too
+              ...(select && { select }), // Use PayloadCMS native select for field filtering
             })
           : await payload.findByID({
               id: input.id,
@@ -899,6 +959,7 @@ export async function executeTool(
               depth: input.depth ?? 0,
               draft: input.isDraft,
               req: mockReq, // Pass mock request to trigger read hooks
+              ...(select && { select }), // Use PayloadCMS native select for field filtering
             })
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
@@ -907,12 +968,14 @@ export async function executeTool(
           mcpOptions?.richText,
           false,
         )
-        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
-        return projected
+        // No need for client-side projection since PayloadCMS select already filtered the fields
+        return withMd
       })()
 
     case 'list':
-      if (analysis.isGlobal) {throw new Error('List operation is not supported for globals')}
+      if (analysis.isGlobal) {
+        throw new Error('List operation is not supported for globals')
+      }
       return await (async () => {
         /**
          * LIST operations typically don't trigger change hooks, but may trigger:
@@ -920,6 +983,8 @@ export async function executeTool(
          * - afterRead hooks
          * These are generally lightweight and add minimal overhead.
          */
+        const select = convertFieldsToSelect(input.fields, false) // Collections are not global
+
         const result = await payload.find({
           collection: collection as CollectionSlug,
           depth: input.depth ?? 0,
@@ -929,8 +994,9 @@ export async function executeTool(
           sort: input.sort,
           where: input.where || {},
           req: mockReq, // Pass mock request to trigger read hooks
+          ...(select && { select }), // Use PayloadCMS native select for field filtering
         })
-        
+
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,
@@ -938,8 +1004,8 @@ export async function executeTool(
           mcpOptions?.richText,
           true,
         )
-        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
-        return projected
+        // No need for client-side projection since PayloadCMS select already filtered the fields
+        return withMd
       })()
 
     case 'update':
@@ -949,6 +1015,8 @@ export async function executeTool(
           analysis,
           payload.config,
         )
+        const select = convertFieldsToSelect(input.fields, analysis.isGlobal)
+
         /**
          * UPDATE operations trigger:
          * - beforeValidate hooks
@@ -967,6 +1035,7 @@ export async function executeTool(
               data: processedData,
               depth: input.depth ?? 0,
               req: mockReq, // CRITICAL: Pass mock request for global updates
+              ...(select && { select }), // Use PayloadCMS native select for field filtering in response
             })
           : await payload.update({
               id: input.id,
@@ -974,6 +1043,7 @@ export async function executeTool(
               data: processedData,
               depth: input.depth ?? 0,
               req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
+              ...(select && { select }), // Use PayloadCMS native select for field filtering in response
             })
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
@@ -982,65 +1052,14 @@ export async function executeTool(
           mcpOptions?.richText,
           false,
         )
-        const projected = applyProjectionToDoc(withMd, input.fields, !analysis.isGlobal)
-        return projected
+        // No need for client-side projection since PayloadCMS select already filtered the fields
+        return withMd
       })()
 
     default:
-      throw new Error(`Unknown operation: ${operation}`)
+      throw new Error(`Unknown operation: ${String(operation)}`)
   }
 }
 
-function getValueAtPath(obj: any, path: string): any {
-  const parts = path.split('.')
-  let current = obj
-  for (const part of parts) {
-    if (current == null || typeof current !== 'object') {return undefined}
-    current = current[part]
-  }
-  return current
-}
-
-function setValueAtPath(obj: any, path: string, value: any): void {
-  const parts = path.split('.')
-  let current = obj
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i]
-    if (current[part] == null || typeof current[part] !== 'object') {
-      current[part] = {}
-    }
-    current = current[part]
-  }
-  current[parts[parts.length - 1]] = value
-}
-
-function projectDoc(doc: any, fields?: string[] | null, includeId: boolean = true): any {
-  if (!fields || fields.length === 0) {return doc}
-  const projected: any = {}
-  if (includeId && doc && typeof doc === 'object' && 'id' in doc) {
-    projected.id = doc.id
-  }
-  for (const path of fields) {
-    if (typeof path !== 'string' || path.trim() === '') {continue}
-    const value = getValueAtPath(doc, path)
-    if (value !== undefined) {setValueAtPath(projected, path, value)}
-  }
-  return projected
-}
-
-function applyProjectionToDoc(doc: any, fields?: string[] | null, isCollection: boolean = true) {
-  if (!fields || fields.length === 0) {return doc}
-  return projectDoc(doc, fields, isCollection)
-}
-
-function applyProjectionToListResult(
-  result: any,
-  fields?: string[] | null,
-  isCollection: boolean = true,
-) {
-  if (!fields || fields.length === 0 || !result || !Array.isArray(result.docs)) {return result}
-  return {
-    ...result,
-    docs: result.docs.map((d: any) => projectDoc(d, fields, isCollection)),
-  }
-}
+// Note: Client-side projection functions removed since we now use PayloadCMS native select parameter
+// This provides better performance by filtering at the database level rather than after retrieval

@@ -31,6 +31,9 @@ export default function ApiReferencePage() {
               <a href="#authentication">Authentication</a>
             </li>
             <li>
+              <a href="#api-endpoints">API Endpoints</a>
+            </li>
+            <li>
               <a href="#media-upload">Media Upload</a>
             </li>
             <li>
@@ -69,8 +72,8 @@ export default function ApiReferencePage() {
           <h4>Example</h4>
           <div className="bg-gray-900 text-green-400 p-4 rounded-lg mb-4">
             <pre className="text-sm">
-              {`import { buildConfig } from 'payload/config'
-import { PayloadPluginMcp } from 'payloadcms-mcp-plugin'
+              {`import { buildConfig } from 'payload'
+import { PayloadPluginMcp } from 'payload-plugin-mcp'
 
 export default buildConfig({
   plugins: [
@@ -118,16 +121,19 @@ export default buildConfig({
           <div className="bg-gray-900 text-green-400 p-4 rounded-lg mb-4">
             <pre className="text-sm">
               {`interface CollectionConfig {
-  name: string
-  operations?: {
-    list?: boolean
-    get?: boolean
-    create?: boolean
-    update?: boolean
-    delete?: boolean
+  collection: Collection
+  options?: {
+    operations?: {
+      list?: boolean
+      get?: boolean
+      create?: boolean
+      update?: boolean
+      delete?: boolean
+    }
+    toolPrefix?: string
+    description?: string
+    excludeFields?: string[]
   }
-  toolPrefix?: string
-  toolDescription?: string
 }`}
             </pre>
           </div>
@@ -139,7 +145,7 @@ export default buildConfig({
             <pre className="text-sm">
               {`interface PayloadPluginMcpConfig {
   apiKey: string
-  collections: 'all' | string[] | CollectionConfig[]
+  collections: 'all' | CollectionConfig[]
   defaultOperations?: {
     list?: boolean
     get?: boolean
@@ -149,14 +155,12 @@ export default buildConfig({
   }
   serverPort?: number
   serverHost?: string
-  toolPrefix?: string
-  toolDescription?: string
-  enableSSE?: boolean
-  enableStdio?: boolean
-  enableHTTP?: boolean
-  customTools?: McpTool[]
-  authMiddleware?: (req: Request) => Promise&lt;boolean&gt;
-  errorHandler?: (error: Error, req: Request) => Promise&lt;McpError&gt;
+  serverName?: string
+  serverDescription?: string
+  enableHttpTransport?: boolean
+  enableStdioTransport?: boolean
+  disabled?: boolean
+  debug?: boolean
 }`}
             </pre>
           </div>
@@ -202,6 +206,58 @@ export default buildConfig({
           <div className="bg-gray-100 p-4 rounded-lg mb-4">
             <code className="block bg-white p-2 rounded">
               Authorization: Bearer your-api-key-here
+            </code>
+          </div>
+
+          <p>Alternatively, you can pass the API key as a query parameter:</p>
+
+          <div className="bg-gray-100 p-4 rounded-lg mb-4">
+            <code className="block bg-white p-2 rounded">?api_key=your-api-key-here</code>
+          </div>
+
+          <h2 id="api-endpoints">API Endpoints</h2>
+
+          <p>The plugin creates the following endpoints:</p>
+
+          <ul>
+            <li>
+              <code>GET /api/plugin/mcp</code> - Discovery endpoint (lists available tools)
+            </li>
+            <li>
+              <code>POST /api/plugin/mcp</code> - JSON-RPC 2.0 endpoint for MCP protocol
+            </li>
+            <li>
+              <code>OPTIONS /api/plugin/mcp</code> - CORS preflight handling
+            </li>
+          </ul>
+
+          <h3>Testing Endpoints</h3>
+
+          <h4>Discovery</h4>
+          <div className="bg-gray-100 p-4 rounded-lg mb-4">
+            <code className="block bg-white p-2 rounded">
+              curl -H "Authorization: Bearer your-api-key" http://localhost:3000/api/plugin/mcp
+            </code>
+          </div>
+
+          <h4>Tool Invocation</h4>
+          <div className="bg-gray-100 p-4 rounded-lg mb-4">
+            <code className="block bg-white p-2 rounded">
+              {`curl -X POST \\
+     -H "Authorization: Bearer your-api-key" \\
+     -H "Content-Type: application/json" \\
+     -d '{
+       "jsonrpc": "2.0",
+       "id": 1,
+       "method": "tools/call",
+       "params": {
+         "name": "posts_list",
+         "arguments": {
+           "limit": 5
+         }
+       }
+     }' \\
+     http://localhost:3000/api/plugin/mcp`}
             </code>
           </div>
 

@@ -32,8 +32,8 @@ export default function HomePage() {
 
           <div className="bg-white rounded-lg p-6 shadow-sm border">
             <div className="text-2xl mb-3">🌐</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Multiple Transport Options</h3>
-            <p className="text-gray-600">Supports both HTTP/SSE and stdio transports</p>
+            <h3 className="font-semibold text-gray-900 mb-2">HTTP Transport</h3>
+            <p className="text-gray-600">Reliable HTTP-based MCP communication</p>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border">
