@@ -121,6 +121,7 @@
     "eslint-config-next": "15.3.0",
     "git-cz": "^4.9.0",
     "graphql": "^16.11.0",
+    "husky": "^9.1.7",
     "mongodb-memory-server": "10.1.4",
     "next": "15.5.0",
     "open": "^10.2.0",
