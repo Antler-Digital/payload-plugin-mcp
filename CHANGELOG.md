@@ -1,3 +1,16 @@
+## [1.1.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.0.0...v1.1.0) (2025-09-11)
+
+### Features
+
+* Enhance post management and routing in Payload CMS ([6f59bc2](https://github.com/Antler-Digital/payload-plugin-mcp/commit/6f59bc2aaf52601df66f98a3dd4b800d88d6561c))
+* integrate semantic release for automated versioning and changelog generation ([dabb92f](https://github.com/Antler-Digital/payload-plugin-mcp/commit/dabb92f5b0882dee01429c2e98c50722f7ad2c4b))
+
+### Bug Fixes
+
+* added husky ([edebc9d](https://github.com/Antler-Digital/payload-plugin-mcp/commit/edebc9d60d495282a68597f368c152a870aa88b2))
+* enhance semantic release configuration for git assets ([cd5dd7b](https://github.com/Antler-Digital/payload-plugin-mcp/commit/cd5dd7b2e11336d7091f3e7cd681ceaa82f67a00))
+* Update package.json and pnpm-lock.yaml for new dependencies and scripts ([9ed09cc](https://github.com/Antler-Digital/payload-plugin-mcp/commit/9ed09cc20567cd18a5e92440130b30de8b4f81d1))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
