@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.0...v1.1.1) (2025-09-11)
+
+### Bug Fixes
+
+* update TypeScript configuration for build process ([048c271](https://github.com/Antler-Digital/payload-plugin-mcp/commit/048c271337ba546acf7016e82f4a5f202ad34790))
+
 ## [1.1.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.0.0...v1.1.0) (2025-09-11)
 
 ### Features
