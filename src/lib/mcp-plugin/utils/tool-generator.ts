@@ -300,6 +300,12 @@ function createListTool(
           description: 'Sort field name (prefix with - for descending)',
           examples: ['createdAt', '-updatedAt', 'title'],
         },
+        where: {
+          type: 'object',
+          description:
+            "Query conditions for filtering documents. Clients may send an object or a JSON string; strings are parsed server-side.",
+          additionalProperties: true,
+        },
         fields: {
           type: 'array',
           description:

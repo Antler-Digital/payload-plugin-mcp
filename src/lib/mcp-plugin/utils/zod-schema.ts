@@ -17,7 +17,7 @@ export function buildInputZodShape(
       return {
         data: z
           .preprocess(
-            (val) => {
+            (val: unknown) => {
               if (typeof val === 'string') {
                 try {
                   return JSON.parse(val)
@@ -101,7 +101,22 @@ export function buildInputZodShape(
           .describe('Page number for pagination (1-based)')
           .optional(),
         sort: z.string().describe('Sort field name (prefix with - for descending)').optional(),
-        where: z.any().describe('Query conditions for filtering documents').optional(),
+        where: z
+          .preprocess(
+            (val: unknown) => {
+              if (typeof val === 'string') {
+                try {
+                  return JSON.parse(val)
+                } catch {
+                  return val
+                }
+              }
+              return val
+            },
+            z.object({}).catchall(z.any()),
+          )
+          .describe('Query conditions for filtering documents (object or JSON string)')
+          .optional(),
         fields: z
           .array(z.string())
           .describe(
@@ -117,7 +132,7 @@ export function buildInputZodShape(
           : { id: z.string().describe('The ID of the document to update') }),
         data: z
           .preprocess(
-            (val) => {
+            (val: unknown) => {
               if (typeof val === 'string') {
                 try {
                   return JSON.parse(val)
