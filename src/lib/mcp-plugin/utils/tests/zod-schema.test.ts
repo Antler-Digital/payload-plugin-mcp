@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
 import type { CollectionAnalysis, FieldAnalysis } from '../../types/index.js'
 
@@ -59,6 +60,14 @@ describe('zod-schema', () => {
         expect(result.limit).toBeDefined()
         expect(result.page).toBeDefined()
         expect(result.depth).toBeDefined()
+      })
+
+      it('should parse string where JSON into object via preprocess', () => {
+        const shape = buildInputZodShape(mockCollectionAnalysis, 'list')
+        // Zod schema shape object: use z.object to validate
+        const schema = (z as any).object(shape)
+        const parsed = schema.parse({ where: '{"title": {"equals": "Hello"}}' })
+        expect(parsed.where).toEqual({ title: { equals: 'Hello' } })
       })
     })
 
