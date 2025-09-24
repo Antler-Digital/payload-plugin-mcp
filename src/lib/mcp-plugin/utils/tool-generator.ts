@@ -279,8 +279,9 @@ function createListTool(
         },
         isDraft: {
           type: 'boolean',
+          default: true,
           description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+            'Prefer drafts when available. True returns latest draft/published version; false returns published only.',
         },
         limit: {
           type: 'number',
@@ -392,8 +393,9 @@ function createGetTool(
         },
         isDraft: {
           type: 'boolean',
+          default: true,
           description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+            'Prefer drafts when available. True returns latest draft/published version; false returns published only.',
         },
         fields: {
           type: 'array',
@@ -478,6 +480,12 @@ function createUpdateTool(
           description:
             "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
           items: { type: 'string' },
+        },
+        publish: {
+          type: 'boolean',
+          default: false,
+          description:
+            'Publish immediately instead of saving a draft (only when drafts are enabled).',
         },
       },
       required: ['id', 'data'],
@@ -955,7 +963,7 @@ export async function executeTool(
           ? await (payload as any).findGlobal({
               slug: String(collection),
               depth: input.depth ?? 0,
-              draft: input.isDraft,
+              draft: input.isDraft === undefined ? true : Boolean(input.isDraft),
               req: mockReq, // Pass mock request for global operations too
               ...(select && { select }), // Use PayloadCMS native select for field filtering
             })
@@ -963,7 +971,7 @@ export async function executeTool(
               id: input.id,
               collection: collection as CollectionSlug,
               depth: input.depth ?? 0,
-              draft: input.isDraft,
+              draft: input.isDraft === undefined ? true : Boolean(input.isDraft),
               req: mockReq, // Pass mock request to trigger read hooks
               ...(select && { select }), // Use PayloadCMS native select for field filtering
             })
@@ -994,7 +1002,7 @@ export async function executeTool(
         const result = await payload.find({
           collection: collection as CollectionSlug,
           depth: input.depth ?? 0,
-          draft: input.isDraft,
+          draft: input.isDraft === undefined ? true : Boolean(input.isDraft),
           limit: input.limit || 10,
           page: input.page || 1,
           sort: input.sort,
@@ -1040,6 +1048,7 @@ export async function executeTool(
               slug: String(collection),
               data: processedData,
               depth: input.depth ?? 0,
+              draft: !Boolean(input.publish),
               req: mockReq, // CRITICAL: Pass mock request for global updates
               ...(select && { select }), // Use PayloadCMS native select for field filtering in response
             })
@@ -1048,6 +1057,7 @@ export async function executeTool(
               collection: collection as CollectionSlug,
               data: processedData,
               depth: input.depth ?? 0,
+              draft: !Boolean(input.publish),
               req: mockReq, // CRITICAL: Pass mock request to trigger afterChange hooks
               ...(select && { select }), // Use PayloadCMS native select for field filtering in response
             })

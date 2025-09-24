@@ -26,6 +26,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
     async ({ name }) => {
       const collection = await payload.find({
         collection: name,
+        draft: true,
       })
 
       return {
@@ -47,6 +48,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       const doc = await payload.create({
         collection,
         data,
+        draft: true,
       })
 
       return {
@@ -70,6 +72,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
         const doc = await payload.create({
           collection,
           data: item,
+          draft: true,
         })
         docs.push(doc.id)
       }
@@ -97,6 +100,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
         id,
         collection,
         data,
+        draft: true,
       })
 
       return {
@@ -171,6 +175,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       const doc = await payload.findByID({
         id,
         collection,
+        draft: true,
       })
 
       return {
@@ -196,6 +201,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       const originalDoc = await payload.findByID({
         id,
         collection,
+        draft: true,
       })
 
       const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...docData } = originalDoc
@@ -206,6 +212,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
           ...docData,
           ...overrides,
         },
+        draft: true,
       })
 
       return {
