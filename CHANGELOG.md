@@ -1,3 +1,9 @@
+## [1.1.5](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.4...v1.1.5) (2025-10-02)
+
+### Bug Fixes
+
+* revert tsconfig.build.json ([c705cc7](https://github.com/Antler-Digital/payload-plugin-mcp/commit/c705cc760ea3c82406dd0d2c69a8a3a4e9d18936))
+
 ## [1.1.4](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.3...v1.1.4) (2025-10-02)
 
 ### Bug Fixes
