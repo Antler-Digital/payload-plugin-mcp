@@ -59,7 +59,7 @@
     "build:app": "next build dev",
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
     "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths --ignore \"**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/__tests__/**,**/tests/**,src/test/**\"",
-    "build:types": "tsc --project tsconfig.build.json",
+    "build:types": "tsc --outDir dist --rootDir ./src",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "clean": "rimraf {dist,*.tsbuildinfo}",
