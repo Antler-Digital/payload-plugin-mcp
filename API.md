@@ -188,3 +188,5 @@ document.querySelector('.signup-button').addEventListener('click', () => {
 - Group related events with common prefixes
 
 For more examples and advanced usage, see the [examples directory](examples/) in the repository.
+
+test
