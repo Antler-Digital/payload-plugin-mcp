@@ -1,3 +1,9 @@
+## [1.1.7](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.6...v1.1.7) (2025-10-06)
+
+### Bug Fixes
+
+* simplify publishConfig in package.json by removing unnecessary exports and main fields ([2a61fc0](https://github.com/Antler-Digital/payload-plugin-mcp/commit/2a61fc0cb01c4cf66454630f535f9313695db1c9))
+
 ## [1.1.6](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.5...v1.1.6) (2025-10-06)
 
 ### Bug Fixes
