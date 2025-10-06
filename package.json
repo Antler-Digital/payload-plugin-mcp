@@ -1,6 +1,6 @@
 {
   "name": "payload-plugin-mcp",
-  "version": "1.1.5",
+  "version": "1.1.4",
   "description": "A PayloadCMS plugin that integrates with MCP (Model Context Protocol) to enable AI model communication and context sharing within PayloadCMS applications",
   "license": "MIT",
   "type": "module",
@@ -40,15 +40,17 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/exports/index.ts",
-      "types": "./dist/exports/index.ts",
-      "default": "./dist/exports/index.ts"
+      "import": "./src/exports/index.ts",
+      "types": "./src/exports/index.ts",
+      "default": "./src/exports/index.ts"
     }
   },
-  "main": "./dist/exports/index.ts",
-  "types": "./dist/exports/index.ts",
+  "main": "./src/exports/index.ts",
+  "types": "./src/exports/index.ts",
   "sideEffects": false,
   "files": [
+    "*.js",
+    "*.d.ts",
     "dist",
     "README.md",
     "LICENSE",
@@ -160,10 +162,15 @@
         "import": "./dist/exports/index.js",
         "types": "./dist/exports/index.d.ts",
         "default": "./dist/exports/index.js"
+      },
+      "./types": {
+        "import": "./dist/types.js",
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
       }
     },
-    "main": "./dist/exports/index.js",
-    "types": "./dist/exports/index.d.ts"
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
