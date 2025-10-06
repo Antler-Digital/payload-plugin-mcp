@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.5...v1.1.6) (2025-10-06)
+
+### Bug Fixes
+
+* publishconfig update ([85af0c4](https://github.com/Antler-Digital/payload-plugin-mcp/commit/85af0c4c9ebc2a2a0d2a097d306ef19876f56893))
+* update package.json to reference built files in dist directory ([425ff67](https://github.com/Antler-Digital/payload-plugin-mcp/commit/425ff67e286663cd5004ca6240fdec6c958a30e9))
+
 ## [1.1.5](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.4...v1.1.5) (2025-10-02)
 
 ### Bug Fixes
