@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.7...v1.1.8) (2025-10-06)
+
+### Bug Fixes
+
+* reorder type generation step in CI/CD workflow ([84e49d8](https://github.com/Antler-Digital/payload-plugin-mcp/commit/84e49d8c4c52f00d9f858188a3bcf0791d29ee66))
+* update package.json to reference built files in the dist directory ([e785b90](https://github.com/Antler-Digital/payload-plugin-mcp/commit/e785b90afd7d0b95efd06130516a9b412d96f371))
+
 ## [1.1.7](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.6...v1.1.7) (2025-10-06)
 
 ### Bug Fixes
