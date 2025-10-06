@@ -113,11 +113,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate types
-        run: pnpm generate:types
-
       - name: Build project
         run: pnpm build
+
+      - name: Generate types
+        run: pnpm generate:types
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
