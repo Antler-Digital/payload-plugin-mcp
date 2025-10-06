@@ -40,13 +40,13 @@
   ],
   "exports": {
     ".": {
-      "import": "./src/exports/index.ts",
-      "types": "./src/exports/index.ts",
-      "default": "./src/exports/index.ts"
+      "import": "./dist/exports/index.ts",
+      "types": "./dist/exports/index.ts",
+      "default": "./dist/exports/index.ts"
     }
   },
-  "main": "./src/exports/index.ts",
-  "types": "./src/exports/index.ts",
+  "main": "./dist/exports/index.ts",
+  "types": "./dist/exports/index.ts",
   "sideEffects": false,
   "files": [
     "dist",
