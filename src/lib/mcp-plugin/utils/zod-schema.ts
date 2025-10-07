@@ -13,7 +13,9 @@ export function buildInputZodShape(
 ): ZodRawShape {
   switch (operation) {
     case 'create':
-      if (analysis.isGlobal) {return {}}
+      if (analysis.isGlobal) {
+        return {}
+      }
       return {
         data: z
           .preprocess(
@@ -48,16 +50,19 @@ export function buildInputZodShape(
       }
 
     case 'delete':
-      if (analysis.isGlobal) {return {}}
+      if (analysis.isGlobal) {
+        return {}
+      }
       return {
         id: z.string().describe('The ID of the document to delete'),
       }
 
-    case 'get':
-      return {
-        ...(analysis.isGlobal
-          ? {}
-          : { id: z.string().describe('The ID of the document to retrieve') }),
+    case 'get': {
+      // Check if collection has slug or title fields for alternative lookup
+      const hasSlugField = analysis.fields.some((field) => field.name === 'slug')
+      const hasTitleField = analysis.fields.some((field) => field.name === 'title')
+
+      const getShape: ZodRawShape = {
         depth: z
           .number()
           .int()
@@ -74,8 +79,46 @@ export function buildInputZodShape(
           .optional(),
       }
 
-    case 'list':
-      if (analysis.isGlobal) {return {}}
+      // Add identifier fields based on what's available
+      if (analysis.isGlobal) {
+        // Globals don't have ID
+        return getShape
+      }
+
+      // For collections, add ID field
+      getShape.id = z.string().describe('The ID of the document to retrieve').optional()
+
+      // Add slug field if available
+      if (hasSlugField) {
+        getShape.slug = z
+          .string()
+          .describe('The slug of the document to retrieve (alternative to ID)')
+          .optional()
+      }
+
+      // Add title field if available
+      if (hasTitleField) {
+        getShape.title = z
+          .string()
+          .describe('The title of the document to retrieve (alternative to ID)')
+          .optional()
+      }
+
+      // For collections with slug/title fields, all identifiers are optional
+      // The executeTool function will handle validation to ensure exactly one is provided
+      if (hasSlugField || hasTitleField) {
+        // Keep all fields optional - validation happens in executeTool
+      } else {
+        // If no slug/title fields, make id required
+        getShape.id = z.string().describe('The ID of the document to retrieve')
+      }
+
+      return getShape
+    }
+    case 'list': {
+      if (analysis.isGlobal) {
+        return {}
+      }
       return {
         depth: z
           .number()
@@ -109,7 +152,7 @@ export function buildInputZodShape(
           )
           .optional(),
       }
-
+    }
     case 'update':
       return {
         ...(analysis.isGlobal
@@ -203,8 +246,12 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
       let a = z.array(z.record(z.string(), z.any()))
       if (field.arrayConstraints) {
         const { maxItems, minItems } = field.arrayConstraints
-        if (typeof minItems === 'number') {a = a.min(minItems)}
-        if (typeof maxItems === 'number') {a = a.max(maxItems)}
+        if (typeof minItems === 'number') {
+          a = a.min(minItems)
+        }
+        if (typeof maxItems === 'number') {
+          a = a.max(maxItems)
+        }
       }
       return a.describe(field.description ?? 'Array of objects')
     }
@@ -217,8 +264,12 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
       let s = z.string()
       if (field.stringConstraints) {
         const { maxLength, minLength, pattern } = field.stringConstraints
-        if (typeof minLength === 'number') {s = s.min(minLength)}
-        if (typeof maxLength === 'number') {s = s.max(maxLength)}
+        if (typeof minLength === 'number') {
+          s = s.min(minLength)
+        }
+        if (typeof maxLength === 'number') {
+          s = s.max(maxLength)
+        }
         if (pattern) {
           try {
             s = s.regex(new RegExp(pattern))
@@ -239,9 +290,15 @@ function fieldAnalysisToZod(field: FieldAnalysis) {
       let n = z.number()
       if (field.numberConstraints) {
         const { integer, max, min } = field.numberConstraints
-        if (typeof min === 'number') {n = n.min(min)}
-        if (typeof max === 'number') {n = n.max(max)}
-        if (integer) {n = n.int()}
+        if (typeof min === 'number') {
+          n = n.min(min)
+        }
+        if (typeof max === 'number') {
+          n = n.max(max)
+        }
+        if (integer) {
+          n = n.int()
+        }
       }
       return field.description ? n.describe(field.description) : n
     }

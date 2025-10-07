@@ -366,37 +366,83 @@ function createGetTool(
   toolPrefix: string,
   collectionDescription: string,
 ): ToolDescriptor {
+  // Check if collection has slug or title fields for alternative lookup
+  const hasSlugField = analysis.fields.some((field) => field.name === 'slug')
+  const hasTitleField = analysis.fields.some((field) => field.name === 'title')
+
+  const properties: Record<string, any> = {
+    depth: {
+      type: 'number',
+      default: 0,
+      description: 'Depth of population for relationships',
+      maximum: 10,
+      minimum: 0,
+    },
+    isDraft: {
+      type: 'boolean',
+      description:
+        "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+    },
+    fields: {
+      type: 'array',
+      description:
+        "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+      items: { type: 'string' },
+    },
+  }
+
+  const required: string[] = []
+
+  // Add ID field (always available)
+  properties.id = {
+    type: 'string',
+    description: 'The ID of the document to retrieve',
+  }
+
+  // Add slug field if available
+  if (hasSlugField) {
+    properties.slug = {
+      type: 'string',
+      description: 'The slug of the document to retrieve (alternative to ID)',
+    }
+  }
+
+  // Add title field if available
+  if (hasTitleField) {
+    properties.title = {
+      type: 'string',
+      description: 'The title of the document to retrieve (alternative to ID)',
+    }
+  }
+
+  // Create description based on available fields
+  let description = `Get a single document from the ${collectionDescription}.`
+  const lookupMethods = ['ID']
+  if (hasSlugField) lookupMethods.push('slug')
+  if (hasTitleField) lookupMethods.push('title')
+
+  description += ` You can lookup by: ${lookupMethods.join(', ')}.`
+  description += ` Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`
+
+  // Make exactly one of the identifier fields required
+  if (hasSlugField || hasTitleField) {
+    properties.oneOf = [
+      { required: ['id'] },
+      ...(hasSlugField ? [{ required: ['slug'] }] : []),
+      ...(hasTitleField ? [{ required: ['title'] }] : []),
+    ]
+  } else {
+    required.push('id')
+  }
+
   return {
     name: `${toolPrefix}_get`,
-    description: `Get a single document by ID from the ${collectionDescription}. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
+    description,
     collection: analysis.slug,
     inputSchema: {
       type: 'object',
-      properties: {
-        id: {
-          type: 'string',
-          description: 'The ID of the document to retrieve',
-        },
-        depth: {
-          type: 'number',
-          default: 0,
-          description: 'Depth of population for relationships',
-          maximum: 10,
-          minimum: 0,
-        },
-        isDraft: {
-          type: 'boolean',
-          description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
-        },
-        fields: {
-          type: 'array',
-          description:
-            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
-          items: { type: 'string' },
-        },
-      },
-      required: ['id'],
+      properties,
+      ...(required.length > 0 && { required }),
     },
     operation: 'get' as ToolOperation,
     outputSchema: createDocumentSchema(analysis),
@@ -945,22 +991,82 @@ export async function executeTool(
          */
         const select = convertFieldsToSelect(input.fields, analysis.isGlobal)
 
-        const result = analysis.isGlobal
-          ? await (payload as any).findGlobal({
-              slug: String(collection),
-              depth: input.depth ?? 0,
-              draft: input.isDraft,
-              req: mockReq, // Pass mock request for global operations too
-              ...(select && { select }), // Use PayloadCMS native select for field filtering
-            })
-          : await payload.findByID({
-              id: input.id,
-              collection: collection as CollectionSlug,
-              depth: input.depth ?? 0,
-              draft: input.isDraft,
-              req: mockReq, // Pass mock request to trigger read hooks
-              ...(select && { select }), // Use PayloadCMS native select for field filtering
-            })
+        if (analysis.isGlobal) {
+          const result = await (payload as any).findGlobal({
+            slug: String(collection),
+            depth: input.depth ?? 0,
+            draft: input.isDraft,
+            req: mockReq, // Pass mock request for global operations too
+            ...(select && { select }), // Use PayloadCMS native select for field filtering
+          })
+          const withMd = await attachMarkdownFromLexicalInResult(
+            result,
+            analysis,
+            payload.config,
+            mcpOptions?.richText,
+            false,
+          )
+          return withMd
+        }
+
+        // Handle collection lookups by ID, slug, or title
+        let result
+        if (input.id) {
+          // Direct ID lookup
+          result = await payload.findByID({
+            id: input.id,
+            collection: collection as CollectionSlug,
+            depth: input.depth ?? 0,
+            draft: input.isDraft,
+            req: mockReq,
+            ...(select && { select }),
+          })
+        } else if (input.slug) {
+          // Lookup by slug
+          const slugResults = await payload.find({
+            collection: collection as CollectionSlug,
+            where: {
+              slug: {
+                equals: input.slug,
+              },
+            },
+            depth: input.depth ?? 0,
+            draft: input.isDraft,
+            limit: 1,
+            req: mockReq,
+            ...(select && { select }),
+          })
+
+          if (slugResults.docs.length === 0) {
+            throw new Error(`Document with slug "${input.slug}" not found`)
+          }
+
+          result = slugResults.docs[0]
+        } else if (input.title) {
+          // Lookup by title
+          const titleResults = await payload.find({
+            collection: collection as CollectionSlug,
+            where: {
+              title: {
+                equals: input.title,
+              },
+            },
+            depth: input.depth ?? 0,
+            draft: input.isDraft,
+            limit: 1,
+            req: mockReq,
+            ...(select && { select }),
+          })
+
+          if (titleResults.docs.length === 0) {
+            throw new Error(`Document with title "${input.title}" not found`)
+          }
+
+          result = titleResults.docs[0]
+        } else {
+          throw new Error('Must provide either id, slug, or title to retrieve a document')
+        }
+
         const withMd = await attachMarkdownFromLexicalInResult(
           result,
           analysis,

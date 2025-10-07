@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 
 import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
+import { devUser } from './helpers/credentials.ts'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -31,6 +32,10 @@ const buildConfigWithMemoryDB = async () => {
 
   return buildConfig({
     admin: {
+      autoLogin: {
+        email: devUser.email,
+        password: devUser.password,
+      },
       importMap: {
         baseDir: path.resolve(dirname),
       },
