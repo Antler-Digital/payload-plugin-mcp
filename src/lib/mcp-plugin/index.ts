@@ -3,7 +3,7 @@ import type { CollectionConfig, Config } from 'payload'
 import type { PayloadPluginMcpConfig } from './types/index.js'
 
 import { McpTokens } from './collections/index.js'
-import { authHandler, getMcpRequestHandler, getRegisteredTools  } from './mcp.js'
+import { authHandler, getMcpRequestHandler, getRegisteredTools } from './mcp.js'
 
 export const PayloadPluginMcp =
   (pluginOptions: PayloadPluginMcpConfig) =>
@@ -58,7 +58,9 @@ export const PayloadPluginMcp =
       )
     }
 
-    if (!config.collections) {config.collections = []}
+    if (!config.collections) {
+      config.collections = []
+    }
 
     if (!config.endpoints) {
       config.endpoints = []
@@ -74,9 +76,7 @@ export const PayloadPluginMcp =
 
     // Install plugin-scoped Tokens collection if not already present in project
     const tokensSlug = options.tokens.slug || 'mcp-tokens'
-    const alreadyHasTokens = (config.collections || []).some(
-      (c) => (c)?.slug === tokensSlug,
-    )
+    const alreadyHasTokens = (config.collections || []).some((c) => c?.slug === tokensSlug)
     if (!alreadyHasTokens) {
       // Create a copy of the McpTokens collection with custom configuration
       const TokensCollection: CollectionConfig = {
@@ -121,11 +121,36 @@ export const PayloadPluginMcp =
             status: 'ok',
             tools: getRegisteredTools(),
             transport: 'HTTP',
+            // OpenAI MCP compatibility metadata
+            server: {
+              name: 'payload-plugin-mcp',
+              version: '1.1.8',
+              description: 'PayloadCMS MCP Plugin - AI-powered content management tools',
+              capabilities: {
+                tools: {},
+                resources: {},
+                prompts: {},
+                logging: {},
+              },
+            },
+            mcp: {
+              version: '2024-11-05',
+              protocol: 'mcp',
+              transport: 'http',
+            },
+            openai: {
+              compatible: true,
+              widgetSupport: true,
+              categories: ['cms', 'discovery', 'media'],
+            },
           }),
           {
             headers: {
               'Access-Control-Allow-Origin': '*',
               'Content-Type': 'application/json',
+              'X-MCP-Version': '2024-11-05',
+              'X-Server-Name': 'payload-plugin-mcp',
+              'X-Server-Version': '1.1.8',
             },
             status: 200,
           },
@@ -155,9 +180,13 @@ export const PayloadPluginMcp =
       handler() {
         return new Response(null, {
           headers: {
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Headers':
+              'Content-Type, Authorization, X-MCP-Version, X-Server-Name, X-Server-Version',
             'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
             'Access-Control-Allow-Origin': '*',
+            'X-MCP-Version': '2024-11-05',
+            'X-Server-Name': 'payload-plugin-mcp',
+            'X-Server-Version': '1.1.8',
           },
           status: 204,
         })

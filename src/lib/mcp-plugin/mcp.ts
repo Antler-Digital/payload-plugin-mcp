@@ -181,6 +181,12 @@ export const getMcpRequestHandler = (
                         }),
                       },
                     ],
+                    metadata: {
+                      tool: tool.name,
+                      collection: 'media',
+                      operation: 'size_check',
+                      timestamp: new Date().toISOString(),
+                    },
                   }
                 } else {
                   // Handle media upload
@@ -192,6 +198,13 @@ export const getMcpRequestHandler = (
 
                   return {
                     content: [{ type: 'text', text: JSON.stringify(result) }],
+                    // OpenAI-compatible response metadata
+                    metadata: {
+                      tool: tool.name,
+                      collection: 'media',
+                      operation: 'upload',
+                      timestamp: new Date().toISOString(),
+                    },
                   }
                 }
               } catch (error) {
@@ -201,11 +214,25 @@ export const getMcpRequestHandler = (
                     {
                       type: 'text',
                       text: JSON.stringify({
-                        error: error instanceof Error ? error.message : 'Unknown error',
+                        error: {
+                          type: 'media_tool_error',
+                          message: error instanceof Error ? error.message : 'Unknown error',
+                          tool: tool.name,
+                          collection: 'media',
+                          operation: 'upload',
+                          timestamp: new Date().toISOString(),
+                        },
                         success: false,
                       }),
                     },
                   ],
+                  metadata: {
+                    tool: tool.name,
+                    collection: 'media',
+                    operation: 'upload',
+                    error: true,
+                    timestamp: new Date().toISOString(),
+                  },
                 }
               }
             },
@@ -253,17 +280,55 @@ export const getMcpRequestHandler = (
               operation: (tool as any).operation,
             })
 
-            const result = await executeTool(
-              tool as any, // Type assertion needed for special tools
-              input,
-              payload,
-              analysis,
-              analysis.mcpOptions?.operations || defaultOperations,
-              { richText: options.richText },
-            )
+            try {
+              const result = await executeTool(
+                tool as any, // Type assertion needed for special tools
+                input,
+                payload,
+                analysis,
+                analysis.mcpOptions?.operations || defaultOperations,
+                { richText: options.richText },
+              )
 
-            return {
-              content: [{ type: 'text', text: JSON.stringify(result) }],
+              return {
+                content: [{ type: 'text', text: JSON.stringify(result) }],
+                // OpenAI-compatible response metadata
+                metadata: {
+                  tool: tool.name,
+                  collection: (tool as any).collection,
+                  operation: (tool as any).operation,
+                  timestamp: new Date().toISOString(),
+                },
+              }
+            } catch (error) {
+              console.error(`[MCP] Tool execution error for ${tool.name}:`, error)
+
+              // OpenAI-compatible error response
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      error: {
+                        type: 'tool_execution_error',
+                        message: error instanceof Error ? error.message : 'Unknown error occurred',
+                        tool: tool.name,
+                        collection: (tool as any).collection,
+                        operation: (tool as any).operation,
+                        timestamp: new Date().toISOString(),
+                      },
+                      success: false,
+                    }),
+                  },
+                ],
+                metadata: {
+                  tool: tool.name,
+                  collection: (tool as any).collection,
+                  operation: (tool as any).operation,
+                  error: true,
+                  timestamp: new Date().toISOString(),
+                },
+              }
             }
           },
         )
@@ -279,7 +344,29 @@ export const getMcpRequestHandler = (
           const auth = getAuthContext()
           const scopes = auth?.scopes || []
           if (!scopes.includes('collections:*:*') && !scopes.includes('mcp:describe')) {
-            return { content: [{ type: 'text', text: 'Unauthorized: missing mcp:describe scope' }] }
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    error: {
+                      type: 'authorization_error',
+                      message: 'Unauthorized: missing mcp:describe scope',
+                      requiredScopes: ['mcp:describe'],
+                      timestamp: new Date().toISOString(),
+                    },
+                    success: false,
+                  }),
+                },
+              ],
+              metadata: {
+                tool: 'list_collections',
+                collection: 'system',
+                operation: 'list',
+                error: true,
+                timestamp: new Date().toISOString(),
+              },
+            }
           }
           return {
             content: [
@@ -297,6 +384,12 @@ export const getMcpRequestHandler = (
                 ),
               },
             ],
+            metadata: {
+              tool: 'list_collections',
+              collection: 'system',
+              operation: 'list',
+              timestamp: new Date().toISOString(),
+            },
           }
         },
       )
@@ -310,14 +403,56 @@ export const getMcpRequestHandler = (
           const auth = getAuthContext()
           const scopes = auth?.scopes || []
           if (!scopes.includes('collections:*:*') && !scopes.includes('mcp:describe')) {
-            return { content: [{ type: 'text', text: 'Unauthorized: missing mcp:describe scope' }] }
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    error: {
+                      type: 'authorization_error',
+                      message: 'Unauthorized: missing mcp:describe scope',
+                      requiredScopes: ['mcp:describe'],
+                      timestamp: new Date().toISOString(),
+                    },
+                    success: false,
+                  }),
+                },
+              ],
+              metadata: {
+                tool: 'describe_collection',
+                collection: 'system',
+                operation: 'describe',
+                error: true,
+                timestamp: new Date().toISOString(),
+              },
+            }
           }
           const slug = args.slug as string
           const analysis = analyses.find((c) => c.slug === slug)
           return {
             content: [
-              { type: 'text', text: analysis ? JSON.stringify(analysis) : 'Collection not found' },
+              {
+                type: 'text',
+                text: analysis
+                  ? JSON.stringify(analysis)
+                  : JSON.stringify({
+                      error: {
+                        type: 'collection_not_found',
+                        message: `Collection '${slug}' not found`,
+                        slug,
+                        timestamp: new Date().toISOString(),
+                      },
+                      success: false,
+                    }),
+              },
             ],
+            metadata: {
+              tool: 'describe_collection',
+              collection: 'system',
+              operation: 'describe',
+              slug,
+              timestamp: new Date().toISOString(),
+            },
           }
         },
       )
