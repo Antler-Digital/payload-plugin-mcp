@@ -183,7 +183,7 @@ The plugin will automatically:
 
 Expected output:
 
-```
+```bash
 ✅ PayloadCMS MCP Plugin initialized
 🔧 Collections exposed: posts, users, media
 🛠️  Tools generated: 8
