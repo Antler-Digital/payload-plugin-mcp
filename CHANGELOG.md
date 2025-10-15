@@ -1,3 +1,10 @@
+## [1.2.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.8...v1.2.0) (2025-10-15)
+
+### Features
+
+* enhance document retrieval with slug and title support ([dd22e60](https://github.com/Antler-Digital/payload-plugin-mcp/commit/dd22e60c01d1005e42dc9c43c90cfddf9f01180b))
+* enhance OpenAI MCP compatibility in PayloadCMS plugin ([8b27898](https://github.com/Antler-Digital/payload-plugin-mcp/commit/8b27898a6aecb6edb7a607a1b08a29d00e769002))
+
 ## [1.1.8](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.1.7...v1.1.8) (2025-10-06)
 
 ### Bug Fixes
