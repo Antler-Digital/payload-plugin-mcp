@@ -26,6 +26,10 @@ pnpm install payload-plugin-mcp
 
 Create a `.env` file in your project root:
 
+```bash
+openssl rand -base64 32 # => eg ACDlHFY0DoreUVnxB62dSPUU++AFg8M5W3fWy6mtyD4=
+```
+
 ```env
 # Required: API key for MCP server authentication
 MCP_API_KEY=your-secret-api-key-here
@@ -330,9 +334,15 @@ This plugin uses **HTTP transport** instead of Server-Sent Events (SSE) for MCP 
 
 ## Claude Desktop Integration
 
+Claude Desktop loads the `claude_desktop_config.json` file when it starts up.
+It will send requests to the endpoints created by the plugin and will become available in your tools.
+
 ### Method 1: Production (Hosted Servers)
 
 Add to your `claude_desktop_config.json`:
+
+The `npx mcp-remote -y` will execute a remote dependency needed to run the plugin.
+For example, this would work if deployed to Vercel (eg you-domain.vercel.app/api/plugin/mcp)
 
 ```json
 {
@@ -344,7 +354,9 @@ Add to your `claude_desktop_config.json`:
         "mcp-remote",
         "https://your-domain.com/api/plugin/mcp",
         "--header",
-        "Authorization: Bearer ${MCP_API_KEY}"
+        "Authorization: Bearer ${MCP_API_KEY}",
+        "--header",
+        "Content-Type: application/json"
       ],
       "env": {
         "MCP_API_KEY": "your-api-key"
@@ -517,53 +529,10 @@ PayloadPluginMcp({
 
 ## Vercel Deployment
 
-### 1. Create `api/mcp/[...path].ts`
+### 1. Create an MCP token for production
 
-```typescript
-// api/mcp/[...path].ts
-import { buildConfig } from 'payload'
-import { payloadPluginMcp, mcpServerHandler } from 'payload-plugin-mcp'
-import { NextRequest } from 'next/server'
-
-// Your payload config
-const config = buildConfig({
-  // ... your payload configuration
-  plugins: [
-    payloadPluginMcp({
-      apiKey: process.env.MCP_API_KEY,
-      collections: 'all',
-      enableHttpTransport: false, // Disable standalone server in Vercel
-    }),
-  ],
-})
-
-export async function GET(req: NextRequest) {
-  // Initialize payload if needed
-  const payload = await getPayload({ config })
-
-  // Create mock request object compatible with PayloadRequest
-  const payloadReq = {
-    url: req.url,
-    method: 'GET',
-    headers: req.headers,
-    payload,
-    // Add other required properties
-  }
-
-  // Use the MCP handler
-  const handler = mcpServerHandler({
-    toolDescriptors: [], // Will be populated from config
-    apiKey: process.env.MCP_API_KEY || '',
-    serverName: 'PayloadCMS MCP Server',
-    serverDescription: 'MCP server for PayloadCMS',
-  })
-
-  return handler(payloadReq)
-}
-
-export async function POST(req: NextRequest) {
-  // Similar implementation for POST requests
-}
+```bash
+openssl rand -base64 32
 ```
 
 ### 2. Environment Variables
@@ -574,7 +543,7 @@ Set in Vercel dashboard:
 MCP_API_KEY=your-production-api-key
 ```
 
-### 3. Claude Desktop Configuration
+### 2. Claude Desktop Configuration
 
 ```json
 {
@@ -586,10 +555,12 @@ MCP_API_KEY=your-production-api-key
         "mcp-remote",
         "https://your-app.vercel.app/api/mcp",
         "--header",
-        "Authorization: Bearer ${MCP_API_KEY}"
+        "Authorization: Bearer ${MCP_API_KEY}",
+        "--header",
+        "application/json"
       ],
       "env": {
-        "MCP_API_KEY": "your-api-key"
+        "MCP_API_KEY": "your-production-api-key"
       }
     }
   }
@@ -660,9 +631,8 @@ MIT License - see LICENSE file for details.
 
 ## Support
 
-- 📖 [Documentation](https://github.com/your-repo/payload-plugin-mcp)
-- 🐛 [Issue Tracker](https://github.com/your-repo/payload-plugin-mcp/issues)
-- 💬 [Discussions](https://github.com/your-repo/payload-plugin-mcp/discussions)
+- 📖 [Documentation](https://github.com/Antler-Digital/payload-plugin-mcp)
+- 🐛 [Issue Tracker](https://github.com/Antler-Digital/payload-plugin-mcp/issues)
 
 ## Related
 
