@@ -62,15 +62,15 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
   }
 
   return (
-    <div className="hidden xl:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-84 overflow-y-auto bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 z-40">
+    <div className="hidden xl:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 overflow-y-auto bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 z-40">
       <div className="p-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
           Table of Contents
         </h3>
         <nav className="space-y-1">
-          {headings.map((heading) => (
+          {headings.map((heading, idx) => (
             <button
-              key={heading.id}
+              key={`${heading.id}-${idx}`}
               onClick={() => scrollToHeading(heading.id)}
               className={`
                 block w-full text-left px-2 py-1 rounded text-sm transition-colors duration-200

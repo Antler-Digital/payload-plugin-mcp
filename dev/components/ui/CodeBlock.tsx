@@ -21,7 +21,6 @@ export default function CodeBlock({
   showLineNumbers = true,
   highlightLines = [],
   copyable = true,
-  maxHeight = '400px',
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
 
@@ -38,7 +37,7 @@ export default function CodeBlock({
   return (
     <div className="relative group">
       <ReactCodeBlock code={code} language={language} lines={highlightLines} theme={themes.vsDark}>
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-lg overflow-hidden shadow-lg border border-gray-700 dark:border-gray-600">
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-lg overflow-hidden shadow-lg border border-gray-700 dark:border-gray-600 text-xs">
           {/* Header */}
           {(filename || copyable) && (
             <div className="flex items-center justify-between px-4 py-3 bg-gray-800 dark:bg-gray-900 border-b border-gray-700 dark:border-gray-600">
@@ -72,7 +71,7 @@ export default function CodeBlock({
           )}
 
           {/* Code Content */}
-          <div className="overflow-auto code-block-container" style={{ maxHeight }}>
+          <div className="overflow-auto code-block-container">
             <ReactCodeBlock.Code className="!p-0">
               {({ isLineHighlighted }) => (
                 <div

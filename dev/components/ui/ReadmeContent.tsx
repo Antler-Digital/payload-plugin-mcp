@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation.js'
 import TableOfContents from './TableOfContents.tsx'
 
 interface ReadmeContentProps {
@@ -9,6 +10,7 @@ interface ReadmeContentProps {
 
 export default function ReadmeContent({ children }: ReadmeContentProps) {
   const [headings, setHeadings] = useState<any[]>([])
+  const pathname = usePathname()
 
   const extractHeadings = () => {
     // Extract headings from the rendered content
@@ -47,15 +49,18 @@ export default function ReadmeContent({ children }: ReadmeContentProps) {
   }
 
   useEffect(() => {
+    // Reset headings when pathname changes
+    setHeadings([])
+
     // Wait for content to be fully rendered
     const timer = setTimeout(extractHeadings, 100)
     return () => clearTimeout(timer)
-  }, [children])
+  }, [children, pathname])
 
   // Also run when the page loads
   useEffect(() => {
     extractHeadings()
-  }, [])
+  }, [pathname])
 
   return (
     <>

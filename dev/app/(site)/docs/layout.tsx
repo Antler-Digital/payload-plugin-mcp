@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import SideNavigation from '../../../components/ui/SideNavigation.tsx'
+import MdxWithToc from '../../../components/ui/MdxWithToc.tsx'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -36,7 +37,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* Content */}
-            <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
+            <MdxWithToc>
+              <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
+            </MdxWithToc>
 
             {/* Footer */}
             <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">

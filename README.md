@@ -320,9 +320,9 @@ This plugin uses **HTTP transport** instead of Server-Sent Events (SSE) for MCP 
 4. **Stateless Design**: Fits well with PayloadCMS's architecture
 5. **Better Performance**: For typical CMS operations, HTTP is more efficient
 
-### SSE Roadmap
+### SSE Support
 
-**Server-Sent Events support is on our roadmap** and will be added in a future release. SSE will be valuable for:
+**Server-Sent Events support** may be considered in future releases if there is sufficient demand. SSE could be valuable for:
 
 - Real-time notifications when content is published
 - Live progress updates for bulk operations

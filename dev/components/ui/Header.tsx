@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import Link from 'next/link'
 
@@ -8,20 +10,21 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            PayloadCMS MCP Plugin
+            PayloadCMS MCP Plugin by{' '}
+            <a
+              href="https://antler.digital/"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-bold"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Antler Digital"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Antler Digital
+            </a>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a
-              href="https://antler.digital/"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors font-medium"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Antler Digital"
-            >
-              Antler Digital
-            </a>
             <a
               href="https://github.com/Antler-Digital/payload-plugin-mcp"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"

@@ -1,5 +1,5 @@
 import React from 'react'
-import Header from '../../components/ui/Header'
+import Header from '../../components/ui/Header.tsx'
 
 import './styles.css'
 
@@ -96,6 +96,13 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
             __html: `
             tailwind.config = {
               darkMode: 'class',
+              theme: {
+                extend: {
+                  fontFamily: {
+                    sans: ['Quicksand', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                  },
+                },
+              },
             }
           `,
           }}

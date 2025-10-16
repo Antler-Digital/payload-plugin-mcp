@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { useMDXComponents as getMDXComponents } from '@mdx-js/react'
 import CodeBlock from './components/ui/CodeBlock.tsx'
 
 export function useMDXComponents(components) {
