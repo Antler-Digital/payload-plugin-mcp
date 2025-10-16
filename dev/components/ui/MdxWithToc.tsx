@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation.js'
-import TableOfContents, { extractHeadings, Heading } from './TableOfContents'
+import TableOfContents, { extractHeadings } from './TableOfContents.tsx'
 
 interface MdxWithTocProps {
   children: React.ReactNode
@@ -10,7 +10,7 @@ interface MdxWithTocProps {
 }
 
 export default function MdxWithToc({ children, content }: MdxWithTocProps) {
-  const [headings, setHeadings] = useState<Heading[]>([])
+  const [headings, setHeadings] = useState<any[]>([])
   const pathname = usePathname()
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function MdxWithToc({ children, content }: MdxWithTocProps) {
       // Fallback: extract headings from the DOM after render
       const extractFromDOM = () => {
         const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-        const extractedHeadings: Heading[] = []
+        const extractedHeadings: any[] = []
 
         headingElements.forEach((element) => {
           const level = parseInt(element.tagName.charAt(1))
