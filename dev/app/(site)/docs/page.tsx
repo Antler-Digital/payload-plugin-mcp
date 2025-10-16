@@ -1,14 +1,18 @@
 import React from 'react'
 import Link from 'next/link'
+import DarkModeToggle from '../../../components/ui/DarkModeToggle.tsx'
 
 export default function DocsPage() {
   return (
     <div className="min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Documentation
-          </h1>
+          <div className="flex justify-center items-center mb-4">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mr-4">
+              Documentation
+            </h1>
+            <DarkModeToggle />
+          </div>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Complete guide to using the PayloadCMS MCP Plugin
           </p>

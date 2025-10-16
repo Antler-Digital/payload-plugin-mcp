@@ -1,0 +1,501 @@
+# Troubleshooting Guide
+
+This guide helps you resolve common issues when using the PayloadCMS MCP Integration Plugin.
+
+## Table of Contents
+
+- [Common Issues](#common-issues)
+- [Authentication Problems](#authentication-problems)
+- [Collection Issues](#collection-issues)
+- [Server Configuration](#server-configuration)
+- [Media Upload Issues](#media-upload-issues)
+- [Performance Issues](#performance-issues)
+- [Debugging](#debugging)
+
+## Common Issues
+
+### Plugin Not Loading
+
+**Symptoms:**
+
+- No MCP server output in console
+- Plugin appears to be ignored
+
+**Solutions:**
+
+1. **Check PayloadCMS version compatibility:**
+
+   ```bash
+   npm list payload
+   ```
+
+   Ensure you're using PayloadCMS 3.0.0 or higher.
+
+2. **Verify plugin installation:**
+
+   ```bash
+   npm list payload-plugin-mcp
+   ```
+
+3. **Check configuration syntax:**
+
+   ```typescript
+   // Ensure proper import and usage
+   import { PayloadPluginMcp } from 'payload-plugin-mcp'
+
+   export default buildConfig({
+     plugins: [
+       PayloadPluginMcp({
+         apiKey: process.env.MCP_API_KEY,
+         collections: 'all',
+       }),
+     ],
+   })
+   ```
+
+### Server Not Starting
+
+**Symptoms:**
+
+- MCP server fails to start
+- Port already in use errors
+
+**Solutions:**
+
+1. **Check port availability:**
+
+   ```bash
+   lsof -i :3001
+   ```
+
+2. **Change server port:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     server: {
+       port: 3002,
+     },
+   })
+   ```
+
+3. **Check environment variables:**
+   ```bash
+   echo $MCP_API_KEY
+   ```
+
+## Authentication Problems
+
+### Invalid API Key
+
+**Symptoms:**
+
+- 401 Unauthorized errors
+- Authentication failed messages
+
+**Solutions:**
+
+1. **Verify API key format:**
+
+   ```bash
+   # Generate a new secure key
+   openssl rand -hex 32
+   ```
+
+2. **Check environment variable:**
+
+   ```bash
+   # In your .env file
+   MCP_API_KEY=your-secret-api-key-here
+   ```
+
+3. **Restart the server after changing environment variables**
+
+### Missing Authorization Header
+
+**Symptoms:**
+
+- 401 Unauthorized errors
+- "Authorization header required" messages
+
+**Solutions:**
+
+1. **Include Authorization header in requests:**
+
+   ```bash
+   curl -H "Authorization: Bearer your-api-key" \
+        http://localhost:3000/api/plugin/mcp
+   ```
+
+2. **Check MCP client configuration:**
+   ```typescript
+   // Ensure proper header configuration
+   const headers = {
+     Authorization: `Bearer ${process.env.MCP_API_KEY}`,
+     'Content-Type': 'application/json',
+   }
+   ```
+
+## Collection Issues
+
+### Collections Not Exposed
+
+**Symptoms:**
+
+- Collections not appearing in MCP tools
+- "Collection not found" errors
+
+**Solutions:**
+
+1. **Check collection configuration:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     collections: ['posts', 'users'], // Explicit list
+   })
+   ```
+
+2. **Verify collection names:**
+
+   ```typescript
+   // Ensure collection names match exactly
+   collections: [
+     {
+       name: 'posts', // Must match collection name
+       slug: 'posts',
+     },
+   ]
+   ```
+
+3. **Check collection permissions:**
+   ```typescript
+   // Ensure collections have proper access control
+   collections: [
+     {
+       name: 'posts',
+       access: {
+         read: () => true,
+         create: () => true,
+       },
+     },
+   ]
+   ```
+
+### Field Access Issues
+
+**Symptoms:**
+
+- Fields not appearing in responses
+- "Field not found" errors
+
+**Solutions:**
+
+1. **Check field configuration:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     collections: [
+       {
+         name: 'posts',
+         mcp: {
+           fields: ['title', 'content', 'author'], // Explicit field list
+         },
+       },
+     ],
+   })
+   ```
+
+2. **Verify field names:**
+   ```typescript
+   // Ensure field names match collection schema
+   fields: [
+     {
+       name: 'title',
+       type: 'text',
+     },
+   ]
+   ```
+
+## Server Configuration
+
+### Port Conflicts
+
+**Symptoms:**
+
+- "Port already in use" errors
+- Server fails to bind to port
+
+**Solutions:**
+
+1. **Find and kill process using port:**
+
+   ```bash
+   lsof -ti:3001 | xargs kill -9
+   ```
+
+2. **Use different port:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     server: {
+       port: 3002,
+       host: '0.0.0.0',
+     },
+   })
+   ```
+
+3. **Check for other services:**
+   ```bash
+   netstat -tulpn | grep :3001
+   ```
+
+### Host Binding Issues
+
+**Symptoms:**
+
+- Server not accessible from external clients
+- Connection refused errors
+
+**Solutions:**
+
+1. **Check host configuration:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     server: {
+       host: '0.0.0.0', // Bind to all interfaces
+     },
+   })
+   ```
+
+2. **Check firewall settings:**
+
+   ```bash
+   # Ubuntu/Debian
+   sudo ufw allow 3001
+
+   # CentOS/RHEL
+   sudo firewall-cmd --add-port=3001/tcp --permanent
+   sudo firewall-cmd --reload
+   ```
+
+## Media Upload Issues
+
+### File Size Limits
+
+**Symptoms:**
+
+- "File too large" errors
+- Upload failures
+
+**Solutions:**
+
+1. **Increase file size limit:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     media: {
+       maxFileSize: 52428800, // 50MB
+     },
+   })
+   ```
+
+2. **Check server limits:**
+   ```typescript
+   // Next.js configuration
+   const nextConfig = {
+     experimental: {
+       serverComponentsExternalPackages: ['sharp'],
+     },
+   }
+   ```
+
+### File Type Restrictions
+
+**Symptoms:**
+
+- "File type not allowed" errors
+- Upload rejected
+
+**Solutions:**
+
+1. **Configure allowed types:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     media: {
+       allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
+     },
+   })
+   ```
+
+2. **Check MIME type detection:**
+   ```bash
+   file --mime-type your-file.jpg
+   ```
+
+## Performance Issues
+
+### Slow Response Times
+
+**Symptoms:**
+
+- Long response times
+- Timeout errors
+
+**Solutions:**
+
+1. **Enable caching:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     cache: {
+       enabled: true,
+       ttl: 300, // 5 minutes
+     },
+   })
+   ```
+
+2. **Optimize database queries:**
+
+   ```typescript
+   // Use select to limit fields
+   collections: [
+     {
+       name: 'posts',
+       mcp: {
+         fields: ['title', 'slug', 'publishedAt'],
+       },
+     },
+   ]
+   ```
+
+3. **Check database indexes:**
+   ```typescript
+   // Ensure proper indexing
+   collections: [
+     {
+       name: 'posts',
+       fields: [
+         {
+           name: 'title',
+           type: 'text',
+           index: true,
+         },
+       ],
+     },
+   ]
+   ```
+
+### Memory Usage
+
+**Symptoms:**
+
+- High memory consumption
+- Out of memory errors
+
+**Solutions:**
+
+1. **Limit result sets:**
+
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     pagination: {
+       defaultLimit: 10,
+       maxLimit: 100,
+     },
+   })
+   ```
+
+2. **Enable streaming for large datasets:**
+   ```typescript
+   PayloadPluginMcp({
+     apiKey: process.env.MCP_API_KEY,
+     streaming: {
+       enabled: true,
+       chunkSize: 1000,
+     },
+   })
+   ```
+
+## Debugging
+
+### Enable Debug Logging
+
+```typescript
+PayloadPluginMcp({
+  apiKey: process.env.MCP_API_KEY,
+  debug: true,
+  logging: {
+    level: 'debug',
+    format: 'json',
+  },
+})
+```
+
+### Check Server Logs
+
+```bash
+# Enable verbose logging
+DEBUG=payload-plugin-mcp:* npm run dev
+```
+
+### Test MCP Connection
+
+```bash
+# Test basic connectivity
+curl -v http://localhost:3000/api/plugin/mcp
+
+# Test with authentication
+curl -H "Authorization: Bearer your-api-key" \
+     -H "Content-Type: application/json" \
+     http://localhost:3000/api/plugin/mcp
+```
+
+### Use MCP Inspector
+
+```bash
+# Install and run MCP Inspector
+npx @modelcontextprotocol/inspector http://localhost:3000/api/plugin/mcp
+```
+
+### Common Debug Commands
+
+```bash
+# Check if server is running
+ps aux | grep node
+
+# Check port usage
+netstat -tulpn | grep :3000
+
+# Check environment variables
+env | grep MCP
+
+# Test API endpoint
+curl -I http://localhost:3000/api/plugin/mcp
+```
+
+## Getting Help
+
+If you're still experiencing issues:
+
+1. **Check the logs** for detailed error messages
+2. **Verify your configuration** against the examples
+3. **Test with minimal configuration** to isolate the issue
+4. **Check GitHub issues** for similar problems
+5. **Create a new issue** with detailed information about your setup
+
+### Useful Resources
+
+- [PayloadCMS Documentation](https://payloadcms.com/docs)
+- [MCP Specification](https://modelcontextprotocol.io)
+- [GitHub Repository](https://github.com/Antler-Digital/payload-plugin-mcp)
+- [Discord Community](https://discord.gg/payloadcms)

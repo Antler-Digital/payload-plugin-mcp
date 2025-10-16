@@ -1,0 +1,279 @@
+# API Reference
+
+## Table of Contents
+
+- [Plugin Configuration](#plugin-configuration)
+- [Collection Configuration](#collection-configuration)
+- [Global Configuration](#global-configuration)
+- [MCP Tools](#mcp-tools)
+- [Authentication](#authentication)
+- [API Endpoints](#api-endpoints)
+- [Media Upload](#media-upload)
+- [Rich Text Processing](#rich-text-processing)
+- [Error Handling](#error-handling)
+
+## Plugin Configuration
+
+### PayloadPluginMcp
+
+The main plugin function that returns a PayloadCMS plugin configuration.
+
+```typescript
+PayloadPluginMcp(options: McpPluginOptions): PayloadPlugin
+```
+
+#### Parameters
+
+- `options` (McpPluginOptions): Configuration options for the MCP plugin
+
+### McpPluginOptions
+
+```typescript
+interface McpPluginOptions {
+  apiKey: string
+  collections?: string[] | 'all'
+  defaultOperations?: {
+    list?: boolean
+    get?: boolean
+    create?: boolean
+    update?: boolean
+    delete?: boolean
+  }
+  server?: {
+    port?: number
+    host?: string
+  }
+  auth?: {
+    enabled?: boolean
+    apiKey?: string
+  }
+  tools?: {
+    enabled?: boolean
+    customTools?: McpTool[]
+  }
+  media?: {
+    uploadEnabled?: boolean
+    maxFileSize?: number
+    allowedTypes?: string[]
+  }
+  richtext?: {
+    enabled?: boolean
+    processors?: RichtextProcessor[]
+  }
+}
+```
+
+#### Properties
+
+| Property            | Type                | Required | Default                                                                  | Description                           |
+| ------------------- | ------------------- | -------- | ------------------------------------------------------------------------ | ------------------------------------- |
+| `apiKey`            | `string`            | Yes      | -                                                                        | API key for MCP server authentication |
+| `collections`       | `string[] \| 'all'` | No       | `'all'`                                                                  | Collections to expose via MCP         |
+| `defaultOperations` | `object`            | No       | `{ list: true, get: true, create: false, update: false, delete: false }` | Default operations for collections    |
+| `server`            | `object`            | No       | `{ port: 3001, host: '0.0.0.0' }`                                        | MCP server configuration              |
+| `auth`              | `object`            | No       | `{ enabled: true }`                                                      | Authentication configuration          |
+| `tools`             | `object`            | No       | `{ enabled: true }`                                                      | MCP tools configuration               |
+| `media`             | `object`            | No       | `{ uploadEnabled: true, maxFileSize: 10485760 }`                         | Media upload configuration            |
+| `richtext`          | `object`            | No       | `{ enabled: true }`                                                      | Rich text processing configuration    |
+
+## Collection Configuration
+
+### Collection-Specific Options
+
+You can configure individual collections with specific options:
+
+```typescript
+collections: [
+  {
+    name: 'posts',
+    mcp: {
+      operations: {
+        list: true,
+        get: true,
+        create: true,
+        update: true,
+        delete: false,
+      },
+      fields: ['title', 'content', 'author'],
+      filters: {
+        published: true,
+      },
+    },
+  },
+]
+```
+
+### Collection MCP Options
+
+```typescript
+interface CollectionMcpOptions {
+  operations?: {
+    list?: boolean
+    get?: boolean
+    create?: boolean
+    update?: boolean
+    delete?: boolean
+  }
+  fields?: string[]
+  filters?: Record<string, any>
+  relations?: {
+    populate?: boolean
+    depth?: number
+  }
+}
+```
+
+## Global Configuration
+
+### Environment Variables
+
+| Variable                   | Type      | Required | Default    | Description                           |
+| -------------------------- | --------- | -------- | ---------- | ------------------------------------- |
+| `MCP_API_KEY`              | `string`  | Yes      | -          | API key for MCP server authentication |
+| `MCP_SERVER_PORT`          | `number`  | No       | `3001`     | Port for MCP server                   |
+| `MCP_SERVER_HOST`          | `string`  | No       | `0.0.0.0`  | Host for MCP server                   |
+| `MCP_AUTH_ENABLED`         | `boolean` | No       | `true`     | Enable authentication                 |
+| `MCP_MEDIA_UPLOAD_ENABLED` | `boolean` | No       | `true`     | Enable media upload                   |
+| `MCP_MEDIA_MAX_FILE_SIZE`  | `number`  | No       | `10485760` | Max file size in bytes                |
+
+## MCP Tools
+
+The plugin automatically generates MCP tools for each collection based on the configured operations.
+
+### Generated Tools
+
+For each collection, the following tools are generated:
+
+- `{collection}_list` - List documents in a collection
+- `{collection}_get` - Get a single document by ID
+- `{collection}_create` - Create a new document (if enabled)
+- `{collection}_update` - Update an existing document (if enabled)
+- `{collection}_delete` - Delete a document (if enabled)
+
+### Tool Schemas
+
+Each tool includes a comprehensive schema with:
+
+- Input parameters
+- Output format
+- Error handling
+- Validation rules
+
+## Authentication
+
+### API Key Authentication
+
+The plugin uses API key authentication by default. Include the API key in the Authorization header:
+
+```bash
+Authorization: Bearer your-api-key-here
+```
+
+### Disabling Authentication
+
+To disable authentication (not recommended for production):
+
+```typescript
+PayloadPluginMcp({
+  apiKey: process.env.MCP_API_KEY,
+  auth: {
+    enabled: false,
+  },
+})
+```
+
+## API Endpoints
+
+### MCP Server Endpoint
+
+The MCP server is available at:
+
+```
+http://localhost:3000/api/plugin/mcp
+```
+
+### Available Endpoints
+
+| Method | Endpoint          | Description                                |
+| ------ | ----------------- | ------------------------------------------ |
+| `GET`  | `/api/plugin/mcp` | Get server information and available tools |
+| `POST` | `/api/plugin/mcp` | Execute MCP tools                          |
+
+## Media Upload
+
+### Configuration
+
+```typescript
+PayloadPluginMcp({
+  apiKey: process.env.MCP_API_KEY,
+  media: {
+    uploadEnabled: true,
+    maxFileSize: 10485760, // 10MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
+  },
+})
+```
+
+### Upload Process
+
+1. Client sends file to MCP server
+2. Server validates file size and type
+3. File is processed and stored
+4. File ID is returned for use in collections
+
+## Rich Text Processing
+
+### Configuration
+
+```typescript
+PayloadPluginMcp({
+  apiKey: process.env.MCP_API_KEY,
+  richtext: {
+    enabled: true,
+    processors: ['markdown', 'html'],
+  },
+})
+```
+
+### Supported Processors
+
+- Markdown to HTML
+- HTML sanitization
+- Link processing
+- Image optimization
+
+## Error Handling
+
+### Error Types
+
+| Error Type            | Description                | HTTP Status |
+| --------------------- | -------------------------- | ----------- |
+| `AuthenticationError` | Invalid or missing API key | 401         |
+| `ValidationError`     | Invalid input parameters   | 400         |
+| `NotFoundError`       | Resource not found         | 404         |
+| `PermissionError`     | Insufficient permissions   | 403         |
+| `ServerError`         | Internal server error      | 500         |
+
+### Error Response Format
+
+```json
+{
+  "error": {
+    "type": "ValidationError",
+    "message": "Invalid input parameters",
+    "details": {
+      "field": "title",
+      "reason": "required"
+    }
+  }
+}
+```
+
+### Error Handling in Tools
+
+All MCP tools include comprehensive error handling with:
+
+- Input validation
+- Permission checks
+- Graceful error responses
+- Detailed error messages
