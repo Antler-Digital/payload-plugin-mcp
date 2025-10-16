@@ -6,13 +6,18 @@ export default function ApiReferencePage() {
     <div className="min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-6">
         <div className="mb-8">
-          <Link href="/docs" className="text-blue-600 hover:text-blue-500 mb-4 inline-block">
+          <Link
+            href="/docs"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mb-4 inline-block"
+          >
             ← Back to Documentation
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">API Reference</h1>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            API Reference
+          </h1>
         </div>
 
-        <div className="prose prose-lg max-w-none">
+        <div className="prose prose-lg dark:prose-invert max-w-none">
           <h2>Table of Contents</h2>
           <ul>
             <li>

@@ -7,8 +7,10 @@ export default function HomePage() {
       <div className="max-w-4xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">PayloadCMS MCP Plugin</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            PayloadCMS MCP Plugin
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) server
             compatible with Claude Desktop
           </p>
@@ -16,59 +18,75 @@ export default function HomePage() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">🚀</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Automatic Tool Generation</h3>
-            <p className="text-gray-600">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Automatic Tool Generation
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Generates MCP tools for all PayloadCMS collections automatically
             </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">🔐</div>
-            <h3 className="font-semibold text-gray-900 mb-2">API Key Authentication</h3>
-            <p className="text-gray-600">Secure authentication using environment variables</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              API Key Authentication
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Secure authentication using environment variables
+            </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">🌐</div>
-            <h3 className="font-semibold text-gray-900 mb-2">HTTP Transport</h3>
-            <p className="text-gray-600">Reliable HTTP-based MCP communication</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">HTTP Transport</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Reliable HTTP-based MCP communication
+            </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">☁️</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Vercel Ready</h3>
-            <p className="text-gray-600">Optimized for serverless deployment</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Vercel Ready</h3>
+            <p className="text-gray-600 dark:text-gray-300">Optimized for serverless deployment</p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">🛠️</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Comprehensive Operations</h3>
-            <p className="text-gray-600">List, get, create, update, and delete operations</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Comprehensive Operations
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              List, get, create, update, and delete operations
+            </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-2xl mb-3">📝</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Claude Desktop Integration</h3>
-            <p className="text-gray-600">Ready to use with Claude Desktop out of the box</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Claude Desktop Integration
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Ready to use with Claude Desktop out of the box
+            </p>
           </div>
         </div>
 
         {/* Quick Start */}
-        <div className="bg-white rounded-lg p-8 shadow-sm border mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Start</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Quick Start</h2>
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">1. Install</h3>
-              <code className="block bg-gray-100 p-3 rounded font-mono text-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">1. Install</h3>
+              <code className="block bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 rounded font-mono text-sm">
                 pnpm install payload-plugin-mcp
               </code>
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">2. Configure</h3>
-              <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">2. Configure</h3>
+              <pre className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 rounded text-sm overflow-x-auto">
                 {`// payload.config.ts
 import { payloadPluginMcp } from 'payload-plugin-mcp'
 
@@ -84,8 +102,10 @@ export default buildConfig({
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">3. Environment</h3>
-              <code className="block bg-gray-100 p-3 rounded font-mono text-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                3. Environment
+              </h3>
+              <code className="block bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 rounded font-mono text-sm">
                 MCP_API_KEY=your-secret-api-key-here
               </code>
             </div>
@@ -93,37 +113,45 @@ export default buildConfig({
         </div>
 
         {/* Documentation Links */}
-        <div className="bg-white rounded-lg p-8 shadow-sm border mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Documentation</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Documentation
+          </h2>
           <div className="grid md:grid-cols-3 gap-4">
             <Link
               href="/docs/getting-started"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="text-2xl mr-3">🚀</div>
               <div>
-                <h3 className="font-semibold text-gray-900">Getting Started</h3>
-                <p className="text-sm text-gray-600">Installation and setup guide</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Getting Started</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Installation and setup guide
+                </p>
               </div>
             </Link>
             <Link
               href="/docs/api-reference"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="text-2xl mr-3">📚</div>
               <div>
-                <h3 className="font-semibold text-gray-900">API Reference</h3>
-                <p className="text-sm text-gray-600">Complete API documentation</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">API Reference</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Complete API documentation
+                </p>
               </div>
             </Link>
             <Link
               href="/docs/troubleshooting"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="text-2xl mr-3">🔧</div>
               <div>
-                <h3 className="font-semibold text-gray-900">Troubleshooting</h3>
-                <p className="text-sm text-gray-600">Common issues and solutions</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Troubleshooting</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Common issues and solutions
+                </p>
               </div>
             </Link>
           </div>
@@ -132,7 +160,7 @@ export default buildConfig({
         {/* Links */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-900 hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             href="https://github.com/Antler-Digital/payload-plugin-mcp"
             rel="noopener noreferrer"
             target="_blank"
@@ -148,7 +176,7 @@ export default buildConfig({
           </a>
 
           <a
-            className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             href="https://www.npmjs.com/package/payload-plugin-mcp"
             rel="noopener noreferrer"
             target="_blank"
@@ -161,17 +189,19 @@ export default buildConfig({
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 pt-8 border-t border-gray-200">
-          <p className="text-gray-600">
+        <div className="text-center mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-gray-600 dark:text-gray-300">
             Made with ❤️ by{' '}
             <a
-              className="text-blue-600 hover:text-blue-500"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
               href="https://github.com/Antler-Digital"
             >
               Antler Digital
             </a>
           </p>
-          <p className="text-sm text-gray-500 mt-2">Licensed under MIT • Version 1.0.0</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Licensed under MIT • Version 1.0.0
+          </p>
         </div>
       </div>
     </div>
