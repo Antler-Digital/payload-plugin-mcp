@@ -1,6 +1,19 @@
 import React from 'react'
 import Link from 'next/link'
 import SideNavigation from '../../../components/ui/SideNavigation.tsx'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Documentation | PayloadCMS MCP Plugin',
+  description:
+    'Complete documentation for the PayloadCMS MCP Plugin. Learn how to integrate your PayloadCMS with Claude Desktop and other AI assistants using the Model Context Protocol.',
+  openGraph: {
+    title: 'PayloadCMS MCP Plugin | Documentation',
+    description:
+      'Complete documentation for the PayloadCMS MCP Plugin. Learn how to integrate your PayloadCMS with Claude Desktop and other AI assistants.',
+    type: 'website',
+  },
+}
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,6 +37,24 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
             {/* Content */}
             <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
+
+            {/* Footer */}
+            <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                <p className="mb-2">Made with ❤️ by</p>
+                <a
+                  href="https://antler.digital/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium"
+                >
+                  Antler Digital
+                </a>
+                <p className="mt-2 text-xs">
+                  Modern web applications that are fast, secure, and scalable
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
