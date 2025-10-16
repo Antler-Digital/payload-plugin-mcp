@@ -33,10 +33,6 @@ Create or update your `.env` file with the required configuration:
 ```env
 # Required: API key for MCP server authentication
 MCP_API_KEY=your-secret-api-key-here
-
-# Optional: Server configuration
-MCP_SERVER_PORT=3001
-MCP_SERVER_HOST=0.0.0.0
 ```
 
 ::: tip
@@ -61,8 +57,8 @@ export default buildConfig({
       apiKey: process.env.MCP_API_KEY,
       collections: 'all', // Expose all collections
       defaultOperations: {
-        list: true,    // Enable listing documents
-        get: true,     // Enable getting single documents
+        list: true, // Enable listing documents
+        get: true, // Enable getting single documents
         create: false, // Disable creation (read-only by default)
         update: false, // Disable updates (read-only by default)
         delete: false, // Disable deletion (read-only by default)

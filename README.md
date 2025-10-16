@@ -33,10 +33,6 @@ openssl rand -base64 32 # => eg ACDlHFY0DoreUVnxB62dSPUU++AFg8M5W3fWy6mtyD4=
 ```env
 # Required: API key for MCP server authentication
 MCP_API_KEY=your-secret-api-key-here
-
-# Optional: Server configuration
-MCP_SERVER_PORT=3001
-MCP_SERVER_HOST=0.0.0.0
 ```
 
 ### 2. Add to PayloadCMS Config
