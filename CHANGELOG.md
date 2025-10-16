@@ -1,3 +1,12 @@
+## [1.3.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.2.2...v1.3.0) (2025-10-16)
+
+### Features
+
+* add dark mode support and improve UI styling ([e29aa46](https://github.com/Antler-Digital/payload-plugin-mcp/commit/e29aa46e8eb322c8da64ad4108ae99f0a35ccfe5))
+* expand documentation with new pages and links ([3357794](https://github.com/Antler-Digital/payload-plugin-mcp/commit/33577941e6647af763526c19711f4c94a9176380))
+* integrate MDX support and enhance documentation styling ([a0bde97](https://github.com/Antler-Digital/payload-plugin-mcp/commit/a0bde970f16cfc68371a590beb97972c798b07d7))
+* integrate react-code-block for enhanced code display ([af68d34](https://github.com/Antler-Digital/payload-plugin-mcp/commit/af68d34795c26a4bf68c6694346b33a73972ea66))
+
 ## [1.2.2](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.2.1...v1.2.2) (2025-10-16)
 
 ## [1.2.1](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.2.0...v1.2.1) (2025-10-15)
