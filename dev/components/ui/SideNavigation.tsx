@@ -37,12 +37,6 @@ const navigationItems = [
     description: 'Version history and releases',
   },
   {
-    title: 'Troubleshooting Guide',
-    href: '/docs/troubleshooting-guide',
-    icon: '🛠️',
-    description: 'Detailed troubleshooting',
-  },
-  {
     title: 'Contributing',
     href: '/docs/contributing',
     icon: '🤝',

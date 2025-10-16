@@ -28,10 +28,8 @@ const withMDX = createMDX({
       // Use string names for serializable plugins
       'remark-gfm',
     ],
-    rehypePlugins: [
-      // Use string names for serializable plugins
-      'rehype-highlight',
-    ],
+    // Removed rehype-highlight since we're using react-code-block
+    rehypePlugins: [],
   },
 })
 

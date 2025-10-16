@@ -23,9 +23,10 @@ export function useMDXComponents(components) {
     },
     // Custom code block styling with react-code-block
     pre: ({ children, ...props }) => {
+      // Extract code content and language from the code element inside pre
       const codeElement = children?.props?.children
-      const className = children?.props?.className || ''
-      const match = /language-(\w+)/.exec(className)
+      const codeClassName = children?.props?.className || ''
+      const match = /language-(\w+)/.exec(codeClassName)
       const language = match ? match[1] : 'text'
 
       if (codeElement && typeof codeElement === 'string') {
