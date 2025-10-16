@@ -188,3 +188,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Sync Changelog to Documentation
+        run: pnpm sync:changelog
+
+      - name: Commit Documentation Updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dev/app/\(site\)/docs/changelog/page.mdx
+          git diff --staged --quiet || git commit -m "docs: sync changelog to documentation site [skip ci]"
+          git push

@@ -728,6 +728,16 @@ curl http://localhost:3000/api/plugin/mcp
 4. Add tests
 5. Submit a pull request
 
+### Development Workflow
+
+This project uses automated processes for versioning and documentation:
+
+- **Semantic Release**: Automatically generates versions and changelogs based on conventional commits
+- **Automated Changelog Sync**: Keeps documentation site changelog synchronized with generated changelog
+- **CI/CD Pipeline**: Comprehensive testing, building, and publishing workflow
+
+For more details, see the [development documentation](docs/internal/AUTOMATED_CHANGELOG_SYNC.md).
+
 ## License
 
 MIT License - see LICENSE file for details.
