@@ -1,32 +1,31 @@
 import React from 'react'
 import Link from 'next/link'
-import DarkModeToggle from '../../../components/ui/DarkModeToggle'
+import SideNavigation from '../../../components/ui/SideNavigation.tsx'
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="mb-8">
-          <Link
-            href="/docs"
-            className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mb-4 inline-block"
-          >
-            ← Back to Documentation
-          </Link>
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Documentation
-              </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl">
-                Complete guide to using the PayloadCMS MCP Plugin
-              </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Side Navigation */}
+      <SideNavigation />
+
+      {/* Main Content */}
+      <div className="lg:ml-80">
+        <div className="min-h-screen py-8">
+          <div className="max-w-4xl mx-auto px-6">
+            {/* Breadcrumb */}
+            <div className="mb-8">
+              <Link
+                href="/docs"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mb-4 inline-block text-sm"
+              >
+                ← Back to Documentation
+              </Link>
             </div>
-            <DarkModeToggle />
+
+            {/* Content */}
+            <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
           </div>
         </div>
-
-        <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
       </div>
     </div>
   )
