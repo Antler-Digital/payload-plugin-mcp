@@ -55,11 +55,11 @@ Example commit types:
 
 ## Release Process
 
-We use [Changesets](https://github.com/changesets/changesets) to manage versioning and releases.
+We use [Semantic Release](https://github.com/semantic-release/semantic-release) to manage versioning and releases.
 
-1. Add a changeset for your changes: `pnpm changeset`
-2. Follow the prompts to describe your changes
-3. Commit the changeset file
+1. Use conventional commits for your changes (e.g., `feat:`, `fix:`, `chore:`)
+2. Follow the conventional commit format: `type(scope): description`
+3. Push your changes to trigger automatic releases
 
 ## Questions or Need Help?
 

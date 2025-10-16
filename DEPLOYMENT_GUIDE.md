@@ -7,6 +7,7 @@ This guide covers the complete process of publishing and maintaining the Payload
 Before publishing to npm, ensure all of these items are completed:
 
 ### ✅ Code Quality
+
 - [ ] All tests pass (`pnpm test:run`)
 - [ ] Linting passes (`pnpm lint`)
 - [ ] Type checking passes (`pnpm tsc --noEmit`)
@@ -14,6 +15,7 @@ Before publishing to npm, ensure all of these items are completed:
 - [ ] Build completes successfully (`pnpm build`)
 
 ### ✅ Documentation
+
 - [ ] README.md is comprehensive and up-to-date
 - [ ] CHANGELOG.md includes all changes
 - [ ] API documentation is complete
@@ -21,6 +23,7 @@ Before publishing to npm, ensure all of these items are completed:
 - [ ] Installation instructions are clear
 
 ### ✅ Package Configuration
+
 - [ ] package.json version is correct
 - [ ] Keywords are optimized for discoverability
 - [ ] Files array includes all necessary files
@@ -28,6 +31,7 @@ Before publishing to npm, ensure all of these items are completed:
 - [ ] License is included
 
 ### ✅ Security
+
 - [ ] No sensitive data in repository
 - [ ] API keys are properly documented
 - [ ] Security audit passes (`pnpm audit`)
@@ -51,19 +55,18 @@ pnpm lint
 pnpm build
 ```
 
-### 2. Version Management (Using Changesets)
+### 2. Version Management (Using Semantic Release)
 
-The project uses [Changesets](https://github.com/changesets/changesets) for version management:
+The project uses [Semantic Release](https://github.com/semantic-release/semantic-release) for version management:
 
 ```bash
-# Add a changeset (describes your changes)
-pnpm changeset
+# Use conventional commits for automatic versioning
+git commit -m "feat: add new feature"
+git commit -m "fix: resolve bug"
+git commit -m "chore: update dependencies"
 
-# Version packages (updates package.json and CHANGELOG.md)
-pnpm changeset:version
-
-# Publish to npm (done automatically by CI)
-pnpm release
+# Push to trigger automatic release
+git push
 ```
 
 ### 3. Manual Publishing (if needed)
@@ -99,6 +102,7 @@ The project includes comprehensive GitHub Actions workflows:
 
 **Triggers:** Push to main/develop, PRs
 **Jobs:**
+
 - **Test**: Runs on Node.js 18, 20, 22
   - Type checking
   - Linting
@@ -112,6 +116,7 @@ The project includes comprehensive GitHub Actions workflows:
 
 **Triggers:** Push, PR, daily schedule
 **Jobs:**
+
 - **Audit**: Security vulnerability scanning
 - **CodeQL**: Static analysis for security issues
 
@@ -119,13 +124,15 @@ The project includes comprehensive GitHub Actions workflows:
 
 **Triggers:** Changes to docs or README
 **Jobs:**
+
 - **Build**: Builds VitePress documentation
 - **Deploy**: Deploys to GitHub Pages
 
 ### Release Workflow (`.github/workflows/release.yml`)
 
-**Triggers:** Git tags (v*.*.*)
+**Triggers:** Git tags (v*.*.\*)
 **Jobs:**
+
 - **Release**: Creates GitHub release with changelog
 - **Notify**: Creates announcement issue
 
@@ -133,11 +140,11 @@ The project includes comprehensive GitHub Actions workflows:
 
 Set up these secrets in your GitHub repository:
 
-| Secret | Description | Required |
-|--------|-------------|----------|
-| `NPM_TOKEN` | npm authentication token | Yes |
-| `PAT_TOKEN` | GitHub Personal Access Token | Optional |
-| `CHANGESETS_TOKEN` | Token for changeset bot | Optional |
+| Secret         | Description                  | Required |
+| -------------- | ---------------------------- | -------- |
+| `NPM_TOKEN`    | npm authentication token     | Yes      |
+| `PAT_TOKEN`    | GitHub Personal Access Token | Optional |
+| `GITHUB_TOKEN` | GitHub token for releases    | Yes      |
 
 ### Creating npm Token
 
@@ -188,22 +195,26 @@ The project follows [Semantic Versioning](https://semver.org/):
 - **MINOR** (0.1.0): New features (backward compatible)
 - **PATCH** (0.0.1): Bug fixes (backward compatible)
 
-### Changeset Types
+### Conventional Commit Types
 
-When creating changesets:
+When making commits:
 
-- `major`: Breaking changes
-- `minor`: New features
-- `patch`: Bug fixes, documentation updates
+- `feat:` - New features (minor version)
+- `fix:` - Bug fixes (patch version)
+- `perf:` - Performance improvements (patch version)
+- `refactor:` - Code refactoring (patch version)
+- `docs:` - Documentation changes (no release)
+- `test:` - Test changes (no release)
+- `chore:` - Maintenance tasks (no release)
+- `ci:` - CI/CD changes (no release)
+- `build:` - Build system changes (no release)
 
-Example changeset:
+Example commits:
 
-```markdown
----
-"payload-plugin-mcp": minor
----
-
-Add support for custom tool descriptions per collection
+```bash
+git commit -m "feat: add support for custom tool descriptions per collection"
+git commit -m "fix: resolve authentication issue in MCP handler"
+git commit -m "chore: update dependencies"
 ```
 
 ## 🔍 Quality Assurance
@@ -249,6 +260,7 @@ After each release:
 ### Common Publishing Issues
 
 **Build Fails:**
+
 ```bash
 # Clean and rebuild
 pnpm clean
@@ -256,6 +268,7 @@ pnpm build
 ```
 
 **npm Publish Fails:**
+
 ```bash
 # Check authentication
 npm whoami
@@ -265,6 +278,7 @@ npm info payload-plugin-mcp
 ```
 
 **CI/CD Fails:**
+
 - Check GitHub secrets are set correctly
 - Verify workflow permissions
 - Review error logs in Actions tab
@@ -278,27 +292,28 @@ If a release has critical issues:
 npm deprecate payload-plugin-mcp@1.0.1 "Critical bug, use 1.0.2+"
 
 # Publish a patch version with fixes
-pnpm changeset
-# Select patch, describe the fix
-pnpm changeset:version
-pnpm release
+git commit -m "fix: resolve critical bug in authentication"
+git push
 ```
 
 ## 🎯 Best Practices
 
 ### Release Management
+
 - **Test thoroughly** before releasing
 - **Use semantic versioning** consistently
 - **Write clear changelogs**
 - **Deprecate old versions** when necessary
 
 ### Community Management
+
 - **Respond promptly** to issues
 - **Welcome contributions** with clear guidelines
 - **Maintain backward compatibility** when possible
 - **Communicate changes** clearly
 
 ### Code Quality
+
 - **Maintain test coverage** above 80%
 - **Keep dependencies updated**
 - **Follow TypeScript best practices**

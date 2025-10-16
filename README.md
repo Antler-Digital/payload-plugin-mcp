@@ -55,6 +55,7 @@ export default buildConfig({
     // your collections here
   ],
   plugins: [
+    // other plugins...
     PayloadPluginMcp({
       apiKey: process.env.MCP_API_KEY,
       collections: 'all', // Expose all collections with default operations
@@ -389,6 +390,112 @@ For local development, you can connect directly:
   }
 }
 ```
+
+## Cursor Integration
+
+Cursor is an AI-powered code editor that supports MCP (Model Context Protocol) servers. You can use this plugin with Cursor to interact with your PayloadCMS data directly from your development environment.
+
+### Setting Up Cursor MCP
+
+1. **Install the MCP Extension** (if not already installed)
+   - Open Cursor
+   - Go to Extensions and search for "MCP" or "Model Context Protocol"
+   - Install the official MCP extension
+
+2. **Configure MCP Server in Cursor**
+
+   Add your PayloadCMS MCP server to Cursor's MCP configuration:
+
+   **For Local Development:**
+
+   ```json
+   {
+     "mcpServers": {
+       "payloadcms-local": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "mcp-remote",
+           "http://localhost:3000/api/plugin/mcp",
+           "--header",
+           "Authorization: Bearer ${MCP_API_KEY}"
+         ],
+         "env": {
+           "MCP_API_KEY": "your-api-key"
+         }
+       }
+     }
+   }
+   ```
+
+   **For Production:**
+
+   ```json
+   {
+     "mcpServers": {
+       "payloadcms-production": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "mcp-remote",
+           "https://your-domain.com/api/plugin/mcp",
+           "--header",
+           "Authorization: Bearer ${MCP_API_KEY}",
+           "--header",
+           "Content-Type: application/json"
+         ],
+         "env": {
+           "MCP_API_KEY": "your-production-api-key"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Cursor**
+   - Close and reopen Cursor to load the new MCP configuration
+   - The PayloadCMS tools should now be available in Cursor's AI chat
+
+### Using PayloadCMS Tools in Cursor
+
+Once configured, you can use your PayloadCMS collections directly in Cursor's AI chat:
+
+**Example Commands:**
+
+- "List all published posts from my CMS"
+- "Create a new user with email john@example.com"
+- "Update the post with ID 123 to set status to published"
+- "Show me the latest 5 media files"
+- "Delete the user with ID 456"
+
+**Cursor will automatically:**
+
+- Use the appropriate MCP tools based on your collection configuration
+- Handle authentication with your API key
+- Format responses in a developer-friendly way
+- Provide context about your CMS structure
+
+### Benefits of Using Cursor with PayloadCMS
+
+- **Direct CMS Access**: Query and modify your CMS data without leaving your editor
+- **Code Context**: Cursor understands your codebase and can suggest CMS operations based on your current work
+- **Automated Workflows**: Create content, manage users, and update data as part of your development workflow
+- **Real-time Integration**: Changes made through Cursor are immediately reflected in your CMS
+
+### Troubleshooting Cursor Integration
+
+1. **Tools Not Appearing**
+   - Verify your MCP server is running (`pnpm dev`)
+   - Check that the API key is correctly set in Cursor's environment
+   - Restart Cursor after configuration changes
+
+2. **Authentication Errors**
+   - Ensure `MCP_API_KEY` matches between your PayloadCMS config and Cursor
+   - Test the API key with curl first (see Testing section below)
+
+3. **Connection Issues**
+   - For local development, ensure your PayloadCMS server is running on the correct port
+   - For production, verify the URL is accessible and CORS is properly configured
 
 ## Testing Your MCP Server
 

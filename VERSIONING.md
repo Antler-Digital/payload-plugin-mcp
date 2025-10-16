@@ -1,130 +1,101 @@
-# Automated Versioning with Changesets
+# Automated Versioning with Semantic Release
 
-This project uses [Changesets](https://github.com/changesets/changesets) for automated version management and publishing. This ensures that:
+This project uses [Semantic Release](https://github.com/semantic-release/semantic-release) for automated version management and publishing. This ensures that:
 
-1. **No duplicate versions** are published to npm
-2. **Semantic versioning** is followed automatically
-3. **Changelog** is generated automatically
-4. **Releases** are automated via GitHub Actions
+- Version numbers are managed automatically based on conventional commits
+- Changelogs are generated automatically
+- Releases are published to npm automatically
+- Git tags are created automatically
 
 ## How It Works
 
-### 1. Making Changes
+The project uses conventional commits to determine version bumps:
 
-When you make changes to the codebase that should trigger a new release, you need to create a "changeset" that describes what changed.
+- `feat:` → minor version bump
+- `fix:` → patch version bump
+- `perf:` → patch version bump
+- `refactor:` → patch version bump
+- `BREAKING CHANGE:` → major version bump
+- `docs:`, `test:`, `chore:`, `ci:`, `build:` → no release
 
-### 2. Creating a Changeset
+## Release Process
 
-Run this command to create a changeset:
+The release process is fully automated via GitHub Actions:
+
+1. **Push to main branch**: When code is pushed to main, the CI/CD workflow runs
+2. **Conventional commit analysis**: Semantic release analyzes commit messages
+3. **Automatic release**: If changes warrant a release, it will:
+   - Update version numbers in `package.json`
+   - Generate/update `CHANGELOG.md`
+   - Create a git tag
+   - Publish to npm
+   - Create a GitHub release
+
+## Usage Examples
+
+### Adding a New Feature
 
 ```bash
-pnpm changeset
-```
-
-This will:
-- Ask you what type of change this is (patch, minor, major)
-- Ask you to describe the change
-- Create a markdown file in `.changeset/` directory
-
-**Change Types:**
-- **Patch** (1.0.0 → 1.0.1): Bug fixes, small improvements
-- **Minor** (1.0.0 → 1.1.0): New features, backwards compatible
-- **Major** (1.0.0 → 2.0.0): Breaking changes
-
-### 3. Committing Changes
-
-Commit your code changes AND the changeset file:
-
-```bash
-git add .
-git commit -m "feat: add new analytics feature"
+git commit -m "feat: add new MCP tool for media upload"
 git push
 ```
 
-### 4. Automated Release Process
-
-When you push to the `main` branch, the GitHub Action will:
-
-1. **Check for changesets**: If there are changeset files, it will create a "Release PR"
-2. **Release PR**: This PR will:
-   - Update the version in `package.json`
-   - Update the `CHANGELOG.md`
-   - Remove the changeset files
-3. **Merge the Release PR**: When you merge this PR, it will automatically publish to npm
-
-## Example Workflow
-
-### Scenario: You fixed a bug
-
-1. Make your code changes
-2. Create a changeset:
-   ```bash
-   pnpm changeset
-   ```
-   - Select "patch" (bug fix)
-   - Describe: "Fix dashboard stats calculation error"
-3. Commit and push:
-   ```bash
-   git add .
-   git commit -m "fix: dashboard stats calculation error"
-   git push
-   ```
-4. GitHub Action creates a Release PR
-5. Review and merge the Release PR
-6. Package is automatically published with new patch version
-
-### Scenario: You added a new feature
-
-1. Make your code changes
-2. Create a changeset:
-   ```bash
-   pnpm changeset
-   ```
-   - Select "minor" (new feature)
-   - Describe: "Add real-time visitor tracking"
-3. Commit and push
-4. Merge the Release PR when ready
-5. Package is published with new minor version
-
-## Manual Commands
-
-If you need to manually manage versions:
+### Fixing a Bug
 
 ```bash
-# Create a changeset
-pnpm changeset
+git commit -m "fix: resolve authentication issue in MCP handler"
+git push
+```
 
-# Preview what the next version will be
-pnpm changeset:version
+### Breaking Change
 
-# Manually publish (not recommended, use GitHub Actions instead)
-pnpm release
+```bash
+git commit -m "feat!: redesign MCP plugin API
+
+BREAKING CHANGE: The MCP plugin configuration has changed significantly"
+git push
 ```
 
 ## Important Notes
 
-1. **Always create changesets** for user-facing changes
-2. **Don't manually edit** `package.json` version - let changesets handle it
-3. **Review Release PRs** carefully before merging
-4. **Internal changes** (like updating dev dependencies) don't need changesets
-5. **Multiple changesets** can be accumulated before creating a release
+1. **Use conventional commits** for all changes that should trigger releases
+2. **Don't manually edit** `package.json` version - let semantic-release handle it
+3. **Follow conventional commit format**: `type(scope): description`
+4. **Internal changes** (like updating dev dependencies) use `chore:` type
+5. **Multiple commits** can be batched into a single release
+
+## Commit Types
+
+- `feat:` - New features (minor version)
+- `fix:` - Bug fixes (patch version)
+- `perf:` - Performance improvements (patch version)
+- `refactor:` - Code refactoring (patch version)
+- `docs:` - Documentation changes (no release)
+- `test:` - Test changes (no release)
+- `chore:` - Maintenance tasks (no release)
+- `ci:` - CI/CD changes (no release)
+- `build:` - Build system changes (no release)
 
 ## Troubleshooting
 
-### "Version already exists" error
-This happens when you manually bump the version. Let changesets handle versioning automatically.
+### Release not happening
 
-### No Release PR created
-Make sure you have changeset files in `.changeset/` directory and they're committed to the main branch.
+- Check that commits follow conventional commit format
+- Ensure changes are pushed to the main branch
+- Verify the CI/CD workflow is running successfully
 
-### GitHub Action fails
-Check that you have `NPM_TOKEN` secret set in your GitHub repository settings.
+### Wrong version bump
 
-## Current Status
+- Review your commit messages to ensure they use the correct type
+- Check the semantic-release configuration in `.releaserc.json`
 
-- ✅ Changesets configured
-- ✅ GitHub Action set up
-- ✅ NPM publishing automated
-- ✅ Semantic versioning enforced
+## Verification
 
-The next time you want to release, just create a changeset and push your changes! 
+Check that semantic-release is working:
+
+- ✅ Semantic-release configured in `.releaserc.json`
+- ✅ GitHub Actions workflow in place
+- ✅ Automated publishing enabled
+- ✅ Conventional commits being used
+
+The next time you want to release, just use conventional commits and push your changes!
