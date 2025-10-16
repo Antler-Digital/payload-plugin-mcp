@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.3.0...v1.3.1) (2025-10-16)
+
+### Bug Fixes
+
+* add changelog synchronization script and update documentation ([7683897](https://github.com/Antler-Digital/payload-plugin-mcp/commit/76838978ade0166f642abf9815402c13fcb762b0))
+
 ## [1.3.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.2.2...v1.3.0) (2025-10-16)
 
 ### Features
