@@ -26,16 +26,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <div className="lg:ml-80 xl:mr-80">
         <div className="min-h-screen py-8">
           <div className="max-w-4xl mx-auto px-6">
-            {/* Breadcrumb */}
-            <div className="mb-8">
-              <Link
-                href="/docs"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mb-4 inline-block text-sm"
-              >
-                ← Back to Documentation
-              </Link>
-            </div>
-
             {/* Content */}
             <MdxWithToc>
               <div className="prose prose-lg dark:prose-invert max-w-none">{children}</div>
