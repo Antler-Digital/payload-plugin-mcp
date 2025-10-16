@@ -51,6 +51,50 @@ export default function DocsPage() {
               Common issues and solutions to help you get unstuck
             </p>
           </Link>
+
+          <Link
+            href="/docs/readme"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-3">📖</div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">README</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Complete project overview and comprehensive documentation
+            </p>
+          </Link>
+
+          <Link
+            href="/docs/changelog"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-3">📝</div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Changelog</h3>
+            <p className="text-gray-600 dark:text-gray-300">Version history and release notes</p>
+          </Link>
+
+          <Link
+            href="/docs/troubleshooting-guide"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-3">🛠️</div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Troubleshooting Guide
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Detailed troubleshooting for common issues
+            </p>
+          </Link>
+
+          <Link
+            href="/docs/contributing"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-3">🤝</div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Contributing</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Guidelines for contributing to the project
+            </p>
+          </Link>
         </div>
       </div>
     </div>
