@@ -22,7 +22,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <SideNavigation />
 
       {/* Main Content */}
-      <div className="lg:ml-80">
+      <div className="lg:ml-80 xl:mr-80">
         <div className="min-h-screen py-8">
           <div className="max-w-4xl mx-auto px-6">
             {/* Breadcrumb */}

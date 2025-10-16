@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import ReadmeContent from '../../../../components/ui/ReadmeContent.tsx'
 
 export const metadata: Metadata = {
   title: 'Getting Started | PayloadCMS MCP Plugin',
@@ -24,5 +25,5 @@ export const metadata: Metadata = {
 }
 
 export default function ReadmeLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return <ReadmeContent>{children}</ReadmeContent>
 }
