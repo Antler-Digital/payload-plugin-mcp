@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useMDXComponents as getMDXComponents } from '@mdx-js/react'
+import CodeBlock from './components/ui/CodeBlock.tsx'
 
 export function useMDXComponents(components) {
   return {
@@ -20,15 +21,35 @@ export function useMDXComponents(components) {
         </a>
       )
     },
-    // Custom code block styling with dark mode support
-    pre: ({ children, ...props }) => (
-      <pre
-        className="bg-gray-900 dark:bg-gray-950 text-green-400 p-4 rounded-lg mb-4 overflow-x-auto"
-        {...props}
-      >
-        {children}
-      </pre>
-    ),
+    // Custom code block styling with react-code-block
+    pre: ({ children, ...props }) => {
+      const codeElement = children?.props?.children
+      const className = children?.props?.className || ''
+      const match = /language-(\w+)/.exec(className)
+      const language = match ? match[1] : 'text'
+
+      if (codeElement && typeof codeElement === 'string') {
+        return (
+          <div className="my-6">
+            <CodeBlock
+              code={codeElement}
+              language={language}
+              showLineNumbers={true}
+              copyable={true}
+            />
+          </div>
+        )
+      }
+
+      return (
+        <pre
+          className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4"
+          {...props}
+        >
+          {children}
+        </pre>
+      )
+    },
     // Custom code inline styling
     code: ({ children, ...props }) => {
       // Check if it's inside a pre tag (code block)
