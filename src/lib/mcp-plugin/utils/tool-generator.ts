@@ -11,6 +11,7 @@ import type {
 } from '../types/index.js'
 
 import { getAuthContext } from '../auth-context.js'
+import { formatCollectionDescription } from './format-collection-description.js'
 import {
   attachMarkdownFromLexicalInResult,
   convertMarkdownFieldsToLexicalForData,
@@ -46,7 +47,7 @@ export function generateToolDescriptors(
 
     const toolPrefix = completeAnalysis.mcpOptions?.toolPrefix || completeAnalysis.slug
     const collectionDescription =
-      completeAnalysis.mcpOptions?.description || `${completeAnalysis.slug} collection`
+      completeAnalysis.mcpOptions?.description || formatCollectionDescription(completeAnalysis)
 
     // Globals only support get/update
     if (completeAnalysis.isGlobal) {
@@ -152,13 +153,21 @@ export function analyzeCollection(
 
   analyzeFields(fields)
 
+  // Extract useAsTitle from collection admin config
+  const useAsTitle = 
+    collection.admin && typeof collection.admin === 'object' && 'useAsTitle' in collection.admin
+      ? String((collection.admin as any).useAsTitle)
+      : undefined
+
   return {
     slug: collection.slug as CollectionSlug,
     fields: fieldAnalyses,
     hasAuth: Boolean(collection.auth),
     hasUpload: Boolean(collection.upload),
+    hasVersions: Boolean(collection.versions),
     mcpOptions,
     timestamps: collection.timestamps !== false,
+    useAsTitle,
   }
 }
 
@@ -190,6 +199,7 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
     options: field.type === 'select' && 'options' in field ? (field as any).options : undefined,
     required: isRequired,
     validation: 'validate' in field ? (field as any).validate : undefined,
+    exampleValue: generateExampleValue(field),
   }
 
   // String-like constraints
@@ -225,7 +235,7 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
     }
   }
 
-  // Array constraints
+  // Array constraints and nested fields
   if (field.type === 'array' || field.type === 'blocks') {
     const minRows = (field as any).minRows
     const maxRows = (field as any).maxRows
@@ -233,6 +243,15 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
       ...(typeof minRows === 'number' ? { minItems: minRows } : {}),
       ...(typeof maxRows === 'number' ? { maxItems: maxRows } : {}),
     }
+    // Analyze nested fields for arrays
+    if ('fields' in field && field.fields) {
+      base.arrayItemFields = (field.fields as Field[]).map(f => analyzeField(f)).filter(Boolean) as FieldAnalysis[]
+    }
+  }
+
+  // Group fields
+  if (field.type === 'group' && 'fields' in field && field.fields) {
+    base.groupFields = (field.fields as Field[]).map(f => analyzeField(f)).filter(Boolean) as FieldAnalysis[]
   }
 
   // Relationship metadata
@@ -256,57 +275,144 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
 }
 
 /**
- * Create a list tool for a collection
+ * Generate an example value for a field based on its type
  */
+function generateExampleValue(field: Field): any {
+  if (!('type' in field)) {return undefined}
+
+  switch (field.type) {
+    case 'array':
+      return []
+    case 'checkbox':
+      return true
+    case 'code':
+      return 'const example = "code";'
+    case 'date':
+      return '2024-01-01T00:00:00.000Z'
+    case 'email':
+      return 'example@email.com'
+    case 'group':
+      return {}
+    case 'json':
+      return { key: 'value' }
+    case 'number':
+      return 42
+    case 'point':
+      return [0, 0]
+    case 'radio':
+    case 'select':
+      if ('options' in field && field.options && Array.isArray(field.options) && field.options.length > 0) {
+        const firstOption = field.options[0]
+        return typeof firstOption === 'string' ? firstOption : firstOption.value
+      }
+      return 'option1'
+    case 'relationship': {
+      const hasMany = 'hasMany' in field && Boolean((field as any).hasMany)
+      return hasMany ? ['related_id_1', 'related_id_2'] : 'related_id'
+    }
+    case 'richText':
+      return 'Rich text content in Markdown format'
+    case 'text':
+    case 'textarea':
+      return 'Example text'
+    case 'upload':
+      return 'upload_id'
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Generate collection-specific where clause examples using only exposed fields
+ */
+function generateWhereExamples(analysis: CollectionAnalysis): string {
+  const examples: string[] = []
+  
+  // Only use fields that aren't excluded (analysis.fields is already filtered)
+  const stringField = analysis.fields.find(f => 
+    ['email', 'select', 'text', 'textarea'].includes(f.type)
+  )
+  const boolField = analysis.fields.find(f => f.type === 'checkbox')
+  
+  // Generate simple example
+  if (stringField) {
+    examples.push(`{ ${stringField.name}: { equals: 'value' } }`)
+  } else if (boolField) {
+    examples.push(`{ ${boolField.name}: { equals: true } }`)
+  }
+  
+  // Always add _status example for draft filtering
+  const statusExample = `{ _status: { equals: 'published' } }`
+  if (examples.length === 0) {
+    examples.push(statusExample)
+  } else {
+    examples.push(`{ and: [${examples[0]}, ${statusExample}] }`)
+  }
+  
+  return examples.length ? `Examples: ${examples.join(' or ')}` : ''
+}
 function createListTool(
   analysis: CollectionAnalysis,
   toolPrefix: string,
   collectionDescription: string,
 ): ToolDescriptor {
+  const whereExamples = generateWhereExamples(analysis)
+  const whereDescription = `PayloadCMS query object for filtering. Operators: equals, not_equals, like, contains, in, not_in, greater_than, less_than, exists. Supports and/or logic. Use _status field to filter by draft/published status. ${whereExamples}`.trim()
+  const properties: Record<string, any> = {
+    depth: {
+      type: 'number',
+      default: 0,
+      description: 'Depth of population for relationships (max: 3). WARNING: Higher depth values consume tokens exponentially faster. Prefer depth 0 and fetch related items separately if needed.',
+      maximum: 3,
+      minimum: 0,
+    },
+  }
+  
+  // Only add isDraft if collection has versions enabled
+  if (analysis.hasVersions) {
+    properties.isDraft = {
+      type: 'boolean',
+      description:
+        "Filter by draft status: true for drafts only, false for published only, undefined for both. Only available when collection has versions enabled.",
+    }
+  }
+  
+  properties.limit = {
+    type: 'number',
+    default: 5,
+    description: 'Maximum number of documents to return (default: 5, max: 10). Use pagination (page parameter) to access more results.',
+    maximum: 10,
+    minimum: 1,
+  }
+  properties.page = {
+    type: 'number',
+    default: 1,
+    description: 'Page number for pagination (1-based)',
+    minimum: 1,
+  }
+  properties.sort = {
+    type: 'string',
+    description: 'Sort field name (prefix with - for descending)',
+    examples: ['createdAt', '-updatedAt', 'title'],
+  }
+  properties.where = {
+    type: 'object',
+    description: whereDescription,
+  }
+  properties.fields = {
+    type: 'array',
+    description:
+      "Optional list of field paths to return (dot notation). If not specified, only 'id' and the title field (if available) will be returned by default. Specify the fields you need explicitly to get additional data. Use dot notation for nested fields (e.g., 'user.email').",
+    items: { type: 'string' },
+  }
+  
   return {
     name: `${toolPrefix}_list`,
     description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
     inputSchema: {
       type: 'object',
-      properties: {
-        depth: {
-          type: 'number',
-          default: 0,
-          description: 'Depth of population for relationships',
-          maximum: 10,
-          minimum: 0,
-        },
-        isDraft: {
-          type: 'boolean',
-          description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
-        },
-        limit: {
-          type: 'number',
-          default: 10,
-          description: 'Maximum number of documents to return',
-          maximum: 100,
-          minimum: 1,
-        },
-        page: {
-          type: 'number',
-          default: 1,
-          description: 'Page number for pagination (1-based)',
-          minimum: 1,
-        },
-        sort: {
-          type: 'string',
-          description: 'Sort field name (prefix with - for descending)',
-          examples: ['createdAt', '-updatedAt', 'title'],
-        },
-        fields: {
-          type: 'array',
-          description:
-            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
-          items: { type: 'string' },
-        },
-      },
+      properties,
     },
     operation: 'list' as ToolOperation,
     outputSchema: {
@@ -378,15 +484,14 @@ function createGetTool(
       maximum: 10,
       minimum: 0,
     },
-    isDraft: {
+    draft: {
       type: 'boolean',
-      description:
-        "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+      description: 'Whether to return draft version (true) or published version (false). Omit to get latest regardless of status.',
     },
     fields: {
       type: 'array',
       description:
-        "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+        "Optional list of field paths to return (dot notation). If not specified, only 'id' and the title field (if available) will be returned by default. Specify the fields you need explicitly to get additional data. Use dot notation for nested fields (e.g., 'user.email').",
       items: { type: 'string' },
     },
   }
@@ -418,8 +523,8 @@ function createGetTool(
   // Create description based on available fields
   let description = `Get a single document from the ${collectionDescription}.`
   const lookupMethods = ['ID']
-  if (hasSlugField) lookupMethods.push('slug')
-  if (hasTitleField) lookupMethods.push('title')
+  if (hasSlugField) {lookupMethods.push('slug')}
+  if (hasTitleField) {lookupMethods.push('title')}
 
   description += ` You can lookup by: ${lookupMethods.join(', ')}.`
   description += ` Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`
@@ -468,14 +573,14 @@ function createCreateTool(
         depth: {
           type: 'number',
           default: 0,
-          description: 'Depth of population for relationships in response',
-          maximum: 10,
+          description: 'Depth of population for relationships in response (max: 3). WARNING: Higher depth values consume tokens exponentially faster. Prefer depth 0 and fetch related items separately if needed.',
+          maximum: 3,
           minimum: 0,
         },
         fields: {
           type: 'array',
           description:
-            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return in response (dot notation). If not specified, only 'id' and the title field (if available) will be returned by default. Specify the fields you need explicitly to get additional data. Use dot notation for nested fields (e.g., 'user.email').",
           items: { type: 'string' },
         },
       },
@@ -509,14 +614,14 @@ function createUpdateTool(
         depth: {
           type: 'number',
           default: 0,
-          description: 'Depth of population for relationships in response',
-          maximum: 10,
+          description: 'Depth of population for relationships in response (max: 3). WARNING: Higher depth values consume tokens exponentially faster. Prefer depth 0 and fetch related items separately if needed.',
+          maximum: 3,
           minimum: 0,
         },
         fields: {
           type: 'array',
           description:
-            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return in response (dot notation). If not specified, only 'id' and the title field (if available) will be returned by default. Specify the fields you need explicitly to get additional data. Use dot notation for nested fields (e.g., 'user.email').",
           items: { type: 'string' },
         },
       },
@@ -776,34 +881,52 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
  * Convert fields array to PayloadCMS select format
  * PayloadCMS select expects a flat object with field names as keys and true as values
  */
-function convertFieldsToSelect(fields?: string[] | null, isGlobal = false): SelectType | undefined {
-  if (!fields || fields.length === 0) {
-    return undefined
-  }
+function convertFieldsToSelect(
+  fields?: string[] | null,
+  isGlobal = false,
+  useAsTitle?: string,
+): SelectType | undefined {
+  // If fields are explicitly provided, use them
+  if (fields && fields.length > 0) {
+    const select: Record<string, true> = {}
+    let hasValidFields = false
 
-  const select: Record<string, true> = {}
-
-  // Process user-specified fields first
-  let hasValidFields = false
-  for (const field of fields) {
-    if (typeof field === 'string' && field.trim() !== '') {
-      const trimmedField = field.trim()
-      // For PayloadCMS select, we use field paths as-is (including dot notation)
-      // PayloadCMS handles nested field selection with dot notation like 'user.email'
-      select[trimmedField] = true
-      hasValidFields = true
+    for (const field of fields) {
+      if (typeof field === 'string' && field.trim() !== '') {
+        const trimmedField = field.trim()
+        select[trimmedField] = true
+        hasValidFields = true
+      }
     }
+
+    // Always include id for collections unless explicitly excluded
+    if (!isGlobal && hasValidFields && !select.id) {
+      select.id = true
+    }
+
+    return hasValidFields ? select : undefined
   }
 
-  // Always include id for collections (but not for globals) unless explicitly excluded
-  // Only add id if user didn't explicitly specify it and we have other valid fields
-  if (!isGlobal && hasValidFields && !select.id) {
-    select.id = true
+  // Default behavior: return only id and useAsTitle field if available
+  if (!fields || fields.length === 0) {
+    const select: Record<string, true> = {}
+
+    // Always include id for collections
+    if (!isGlobal) {
+      select.id = true
+    }
+
+    // Include useAsTitle field if available
+    if (useAsTitle) {
+      select[useAsTitle] = true
+    }
+
+    // Only return select object if we have fields to select
+    // For globals without useAsTitle, return undefined to get all fields
+    return Object.keys(select).length > 0 ? select : undefined
   }
 
-  // If no valid fields were specified, return undefined to select all fields
-  // This prevents empty select objects which could cause PayloadCMS to return no data
-  return hasValidFields ? select : undefined
+  return undefined
 }
 
 /**
@@ -932,7 +1055,7 @@ export async function executeTool(
           analysis,
           payload.config,
         )
-        const select = convertFieldsToSelect(input.fields, false) // Collections are not global
+        const select = convertFieldsToSelect(input.fields, false, analysis.useAsTitle) // Collections are not global
 
         /**
          * CREATE operations trigger:
@@ -989,7 +1112,7 @@ export async function executeTool(
          * - afterRead hooks
          * Performance impact is minimal unless hooks perform heavy operations.
          */
-        const select = convertFieldsToSelect(input.fields, analysis.isGlobal)
+        const select = convertFieldsToSelect(input.fields, analysis.isGlobal, analysis.useAsTitle)
 
         if (analysis.isGlobal) {
           const result = await (payload as any).findGlobal({
@@ -1089,13 +1212,13 @@ export async function executeTool(
          * - afterRead hooks
          * These are generally lightweight and add minimal overhead.
          */
-        const select = convertFieldsToSelect(input.fields, false) // Collections are not global
+        const select = convertFieldsToSelect(input.fields, false, analysis.useAsTitle) // Collections are not global
 
         const result = await payload.find({
           collection: collection as CollectionSlug,
           depth: input.depth ?? 0,
           draft: input.isDraft,
-          limit: input.limit || 10,
+          limit: input.limit || 5,
           page: input.page || 1,
           sort: input.sort,
           where: input.where || {},
@@ -1121,7 +1244,7 @@ export async function executeTool(
           analysis,
           payload.config,
         )
-        const select = convertFieldsToSelect(input.fields, analysis.isGlobal)
+        const select = convertFieldsToSelect(input.fields, analysis.isGlobal, analysis.useAsTitle)
 
         /**
          * UPDATE operations trigger:

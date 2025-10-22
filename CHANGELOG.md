@@ -95,6 +95,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub issue and PR templates
 - Automated release management
 - CodeQL security analysis
+- Enhanced collection description formatting utility
+- Configurable rich text truncation for list operations
+- Better field analysis and schema generation
+- Improved markdown to Lexical conversion handling
+
+### Enhanced
+- Rich text field handling with better error messages
+- Tool generation with more comprehensive field analysis
+- Type definitions for better type safety
+- Collection documentation generation
 
 ### Changed
 - Improved package.json configuration for npm publishing

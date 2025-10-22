@@ -71,6 +71,12 @@ export function buildInputZodShape(
           .default(0)
           .describe('Depth of population for relationships')
           .optional(),
+        draft: z
+          .boolean()
+          .describe(
+            'Whether to return draft version (true) or published version (false). Omit to get latest regardless of status.',
+          )
+          .optional(),
         fields: z
           .array(z.string())
           .describe(
@@ -119,7 +125,20 @@ export function buildInputZodShape(
       if (analysis.isGlobal) {
         return {}
       }
-      return {
+      
+      // Generate collection-specific where examples using only exposed fields
+      const stringField = analysis.fields.find(f => 
+        ['email', 'select', 'text', 'textarea'].includes(f.type)
+      )
+      const boolField = analysis.fields.find(f => f.type === 'checkbox')
+      const whereExample = stringField 
+        ? `{ ${stringField.name}: { equals: 'value' } }` 
+        : boolField 
+        ? `{ ${boolField.name}: { equals: true } }` 
+        : `{ fieldName: { equals: 'value' } }`
+      
+      const whereDesc = `PayloadCMS query object. Operators: equals, not_equals, like, contains, in, not_in, greater_than, less_than, exists. Supports and/or logic. Use _status field to filter by draft/published status. Example: ${whereExample}`
+      const shape: ZodRawShape = {
         depth: z
           .number()
           .int()
@@ -144,7 +163,7 @@ export function buildInputZodShape(
           .describe('Page number for pagination (1-based)')
           .optional(),
         sort: z.string().describe('Sort field name (prefix with - for descending)').optional(),
-        where: z.any().describe('Query conditions for filtering documents').optional(),
+        where: z.any().describe(whereDesc).optional(),
         fields: z
           .array(z.string())
           .describe(
@@ -152,6 +171,18 @@ export function buildInputZodShape(
           )
           .optional(),
       }
+      
+      // Only add isDraft if collection has versions enabled
+      if (analysis.hasVersions) {
+        shape.isDraft = z
+          .boolean()
+          .describe(
+            'Filter by draft status: true for drafts only, false for published only, undefined for both. Only available when collection has versions enabled.',
+          )
+          .optional()
+      }
+      
+      return shape
     }
     case 'update':
       return {
