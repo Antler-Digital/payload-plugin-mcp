@@ -24,8 +24,6 @@ async function getEditorConfig({
   const factory = (richtext).editorConfigFactory
   if (!factory) {throw new Error('editorConfigFactory not found in @payloadcms/richtext-lexical')}
 
-  // const payloadConfig = (await import('@payload-config')).default
-
   const editorConfigFactory = typeof factory?.default === 'function' ? factory.default : factory
   cachedEditorConfig = editorConfigFactory({ config: await payloadConfig })
   return cachedEditorConfig
@@ -44,6 +42,76 @@ export async function markdownToLexical(
   return await convert({ editorConfig, markdown })
 }
 
+/**
+ * Best-effort normalization to preserve content when markdown conversion hits unsupported nodes
+ * (e.g., experimental tables). Converts table nodes into GitHub-Flavored Markdown (GFM)
+ * so the rest of the document continues to convert.
+ */
+export function normalizeTablesForMarkdown(state: SerializedEditorState): SerializedEditorState {
+  try {
+    const clone: SerializedEditorState = JSON.parse(JSON.stringify(state))
+
+    function extractPlainText(node: any): string {
+      if (!node) {return ''}
+      if (typeof (node as any).text === 'string') {return (node as any).text}
+      const children = Array.isArray((node as any).children) ? (node as any).children : []
+      return children.map(extractPlainText).join('')
+    }
+
+    function tableNodeToMarkdown(node: any): string {
+      const rows = Array.isArray((node as any).children) ? (node as any).children : []
+      const cellsByRow: string[][] = rows.map((row: any) => {
+        const cells = Array.isArray((row as any).children) ? (row as any).children : []
+        return cells.map((cell: any) => {
+          const txt = extractPlainText(cell)
+          return String(txt).replace(/\|/g, '\\|').trim()
+        })
+      })
+
+      if (cellsByRow.length === 0) {return ''}
+      const colCount = Math.max(...cellsByRow.map((r) => r.length)) || 1
+      const header = (cellsByRow[0] || []).concat(Array(colCount).fill('')).slice(0, colCount)
+      const separator = new Array(colCount).fill('---')
+      const body = cellsByRow
+        .slice(1)
+        .map((r) => r.concat(Array(colCount).fill('')).slice(0, colCount))
+
+      const toLine = (cols: string[]) => `| ${cols.join(' | ')} |`
+      const lines = [toLine(header), toLine(separator), ...body.map(toLine)]
+      return lines.join('\n')
+    }
+
+    function transform(node: any): any {
+      if (!node || typeof node !== 'object') {return node}
+      if ((node as any).type === 'table') {
+        const md = tableNodeToMarkdown(node)
+        return {
+          type: 'paragraph',
+          version: 1,
+          children: [
+            {
+              type: 'text',
+              version: 1,
+              text: md,
+            },
+          ],
+        }
+      }
+      if (Array.isArray((node as any).children)) {
+        ;(node as any).children = (node as any).children.map(transform)
+      }
+      return node
+    }
+
+    if ((clone as any) && (clone as any).root) {
+      ;(clone as any).root = transform((clone as any).root)
+    }
+    return clone
+  } catch {
+    return state
+  }
+}
+
 export async function lexicalToMarkdown(
   data: SerializedEditorState,
   payloadConfig: SanitizedConfig,
@@ -54,7 +122,13 @@ export async function lexicalToMarkdown(
   if (typeof convert !== 'function') {
     throw new Error('convertLexicalToMarkdown function not found in @payloadcms/richtext-lexical')
   }
-  return await convert({ data, editorConfig })
+  // Normalize unsupported nodes (e.g., tables) before converting to markdown
+  const normalized = normalizeTablesForMarkdown(data)
+  const out = await convert({ data: normalized, editorConfig }) as any
+  // Some versions may return an array; ensure a string is returned from this util
+  if (typeof out === 'string') {return out}
+  if (Array.isArray(out)) {return out.join('\n')}
+  return String(out ?? '')
 }
 
 function getValueAtPath(obj: any, path: string): any {

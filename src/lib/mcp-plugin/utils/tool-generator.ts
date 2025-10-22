@@ -11,6 +11,7 @@ import type {
 } from '../types/index.js'
 
 import { getAuthContext } from '../auth-context.js'
+import { formatCollectionDescription } from './format-collection-description.js'
 import {
   attachMarkdownFromLexicalInResult,
   convertMarkdownFieldsToLexicalForData,
@@ -46,7 +47,7 @@ export function generateToolDescriptors(
 
     const toolPrefix = completeAnalysis.mcpOptions?.toolPrefix || completeAnalysis.slug
     const collectionDescription =
-      completeAnalysis.mcpOptions?.description || `${completeAnalysis.slug} collection`
+      completeAnalysis.mcpOptions?.description || formatCollectionDescription(completeAnalysis)
 
     // Globals only support get/update
     if (completeAnalysis.isGlobal) {
@@ -157,6 +158,7 @@ export function analyzeCollection(
     fields: fieldAnalyses,
     hasAuth: Boolean(collection.auth),
     hasUpload: Boolean(collection.upload),
+    hasVersions: Boolean(collection.versions),
     mcpOptions,
     timestamps: collection.timestamps !== false,
   }
@@ -190,6 +192,7 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
     options: field.type === 'select' && 'options' in field ? (field as any).options : undefined,
     required: isRequired,
     validation: 'validate' in field ? (field as any).validate : undefined,
+    exampleValue: generateExampleValue(field),
   }
 
   // String-like constraints
@@ -225,7 +228,7 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
     }
   }
 
-  // Array constraints
+  // Array constraints and nested fields
   if (field.type === 'array' || field.type === 'blocks') {
     const minRows = (field as any).minRows
     const maxRows = (field as any).maxRows
@@ -233,6 +236,15 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
       ...(typeof minRows === 'number' ? { minItems: minRows } : {}),
       ...(typeof maxRows === 'number' ? { maxItems: maxRows } : {}),
     }
+    // Analyze nested fields for arrays
+    if ('fields' in field && field.fields) {
+      base.arrayItemFields = (field.fields as Field[]).map(f => analyzeField(f)).filter(Boolean) as FieldAnalysis[]
+    }
+  }
+
+  // Group fields
+  if (field.type === 'group' && 'fields' in field && field.fields) {
+    base.groupFields = (field.fields as Field[]).map(f => analyzeField(f)).filter(Boolean) as FieldAnalysis[]
   }
 
   // Relationship metadata
@@ -256,57 +268,144 @@ function analyzeField(field: Field, prefix = ''): FieldAnalysis | null {
 }
 
 /**
- * Create a list tool for a collection
+ * Generate an example value for a field based on its type
  */
+function generateExampleValue(field: Field): any {
+  if (!('type' in field)) {return undefined}
+
+  switch (field.type) {
+    case 'array':
+      return []
+    case 'checkbox':
+      return true
+    case 'code':
+      return 'const example = "code";'
+    case 'date':
+      return '2024-01-01T00:00:00.000Z'
+    case 'email':
+      return 'example@email.com'
+    case 'group':
+      return {}
+    case 'json':
+      return { key: 'value' }
+    case 'number':
+      return 42
+    case 'point':
+      return [0, 0]
+    case 'radio':
+    case 'select':
+      if ('options' in field && field.options && Array.isArray(field.options) && field.options.length > 0) {
+        const firstOption = field.options[0]
+        return typeof firstOption === 'string' ? firstOption : firstOption.value
+      }
+      return 'option1'
+    case 'relationship': {
+      const hasMany = 'hasMany' in field && Boolean((field as any).hasMany)
+      return hasMany ? ['related_id_1', 'related_id_2'] : 'related_id'
+    }
+    case 'richText':
+      return 'Rich text content in Markdown format'
+    case 'text':
+    case 'textarea':
+      return 'Example text'
+    case 'upload':
+      return 'upload_id'
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Generate collection-specific where clause examples using only exposed fields
+ */
+function generateWhereExamples(analysis: CollectionAnalysis): string {
+  const examples: string[] = []
+  
+  // Only use fields that aren't excluded (analysis.fields is already filtered)
+  const stringField = analysis.fields.find(f => 
+    ['email', 'select', 'text', 'textarea'].includes(f.type)
+  )
+  const boolField = analysis.fields.find(f => f.type === 'checkbox')
+  
+  // Generate simple example
+  if (stringField) {
+    examples.push(`{ ${stringField.name}: { equals: 'value' } }`)
+  } else if (boolField) {
+    examples.push(`{ ${boolField.name}: { equals: true } }`)
+  }
+  
+  // Always add _status example for draft filtering
+  const statusExample = `{ _status: { equals: 'published' } }`
+  if (examples.length === 0) {
+    examples.push(statusExample)
+  } else {
+    examples.push(`{ and: [${examples[0]}, ${statusExample}] }`)
+  }
+  
+  return examples.length ? `Examples: ${examples.join(' or ')}` : ''
+}
 function createListTool(
   analysis: CollectionAnalysis,
   toolPrefix: string,
   collectionDescription: string,
 ): ToolDescriptor {
+  const whereExamples = generateWhereExamples(analysis)
+  const whereDescription = `PayloadCMS query object for filtering. Operators: equals, not_equals, like, contains, in, not_in, greater_than, less_than, exists. Supports and/or logic. Use _status field to filter by draft/published status. ${whereExamples}`.trim()
+  const properties: Record<string, any> = {
+    depth: {
+      type: 'number',
+      default: 0,
+      description: 'Depth of population for relationships',
+      maximum: 10,
+      minimum: 0,
+    },
+  }
+  
+  // Only add isDraft if collection has versions enabled
+  if (analysis.hasVersions) {
+    properties.isDraft = {
+      type: 'boolean',
+      description:
+        "Filter by draft status: true for drafts only, false for published only, undefined for both. Only available when collection has versions enabled.",
+    }
+  }
+  
+  properties.limit = {
+    type: 'number',
+    default: 10,
+    description: 'Maximum number of documents to return',
+    maximum: 100,
+    minimum: 1,
+  }
+  properties.page = {
+    type: 'number',
+    default: 1,
+    description: 'Page number for pagination (1-based)',
+    minimum: 1,
+  }
+  properties.sort = {
+    type: 'string',
+    description: 'Sort field name (prefix with - for descending)',
+    examples: ['createdAt', '-updatedAt', 'title'],
+  }
+  properties.where = {
+    type: 'object',
+    description: whereDescription,
+  }
+  properties.fields = {
+    type: 'array',
+    description:
+      "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+    items: { type: 'string' },
+  }
+  
   return {
     name: `${toolPrefix}_list`,
     description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
     collection: analysis.slug,
     inputSchema: {
       type: 'object',
-      properties: {
-        depth: {
-          type: 'number',
-          default: 0,
-          description: 'Depth of population for relationships',
-          maximum: 10,
-          minimum: 0,
-        },
-        isDraft: {
-          type: 'boolean',
-          description:
-            "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
-        },
-        limit: {
-          type: 'number',
-          default: 10,
-          description: 'Maximum number of documents to return',
-          maximum: 100,
-          minimum: 1,
-        },
-        page: {
-          type: 'number',
-          default: 1,
-          description: 'Page number for pagination (1-based)',
-          minimum: 1,
-        },
-        sort: {
-          type: 'string',
-          description: 'Sort field name (prefix with - for descending)',
-          examples: ['createdAt', '-updatedAt', 'title'],
-        },
-        fields: {
-          type: 'array',
-          description:
-            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
-          items: { type: 'string' },
-        },
-      },
+      properties,
     },
     operation: 'list' as ToolOperation,
     outputSchema: {
@@ -378,10 +477,9 @@ function createGetTool(
       maximum: 10,
       minimum: 0,
     },
-    isDraft: {
+    draft: {
       type: 'boolean',
-      description:
-        "Whether to include draft documents (true for drafts, false for published, undefined for both). Maps to Payload's draft parameter.",
+      description: 'Whether to return draft version (true) or published version (false). Omit to get latest regardless of status.',
     },
     fields: {
       type: 'array',
@@ -418,8 +516,8 @@ function createGetTool(
   // Create description based on available fields
   let description = `Get a single document from the ${collectionDescription}.`
   const lookupMethods = ['ID']
-  if (hasSlugField) lookupMethods.push('slug')
-  if (hasTitleField) lookupMethods.push('title')
+  if (hasSlugField) {lookupMethods.push('slug')}
+  if (hasTitleField) {lookupMethods.push('title')}
 
   description += ` You can lookup by: ${lookupMethods.join(', ')}.`
   description += ` Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`

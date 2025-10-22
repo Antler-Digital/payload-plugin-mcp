@@ -91,7 +91,10 @@ export interface FieldAnalysis {
     maxItems?: number
     minItems?: number
   }
+  arrayItemFields?: FieldAnalysis[]
   description?: string
+  exampleValue?: any
+  groupFields?: FieldAnalysis[]
   hasDefault: boolean
   name: string
   numberConstraints?: {
@@ -124,6 +127,7 @@ export interface CollectionAnalysis {
   fields: FieldAnalysis[]
   hasAuth: boolean
   hasUpload: boolean
+  hasVersions?: boolean
   /** True when this analysis represents a GlobalConfig rather than a Collection */
   isGlobal?: boolean
   mcpOptions?: CollectionMcpOptions
