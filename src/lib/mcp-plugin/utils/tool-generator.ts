@@ -408,7 +408,7 @@ function createListTool(
   
   return {
     name: `${toolPrefix}_list`,
-    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`,
+    description: `List documents from the ${collectionDescription} with optional filtering, pagination, and sorting. IMPORTANT: Always use 'where' filters to narrow results and reduce token usage—avoid fetching all documents when you can filter by specific criteria (status, dates, relationships, etc.). The default response includes only 'id' and title field. Use 'fields' parameter sparingly to request additional fields only when absolutely necessary for the current task.`,
     collection: analysis.slug,
     inputSchema: {
       type: 'object',
@@ -527,7 +527,7 @@ function createGetTool(
   if (hasTitleField) {lookupMethods.push('title')}
 
   description += ` You can lookup by: ${lookupMethods.join(', ')}.`
-  description += ` Tip: nested relationship fields can be large; set depth to 0 (default) and specify 'fields' to return only what you need.`
+  description += ` RECOMMENDED: Use the 'fields' parameter to explicitly request all fields you need for your task. The default response includes only 'id' and title field—specify additional fields to get complete information and avoid missing relevant data. Keep depth at 0 (default) unless you specifically need populated relationships.`
 
   // Make exactly one of the identifier fields required
   if (hasSlugField || hasTitleField) {
