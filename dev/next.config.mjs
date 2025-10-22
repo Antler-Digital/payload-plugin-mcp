@@ -9,6 +9,10 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 const nextConfig = {
   // Allow .mdx extensions for files
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  // Disable Turbopack in Next.js 15
+  experimental: {
+    turbo: false,
+  },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],
@@ -36,4 +40,7 @@ const withMDX = createMDX({
 // Combine MDX and Next.js config
 const mdxConfig = withMDX(nextConfig)
 
-export default withPayload(mdxConfig, { devBundleServerPackages: false })
+export default withPayload(mdxConfig, {
+  devBundleServerPackages: false,
+  configPath: './payload.config.js',
+})

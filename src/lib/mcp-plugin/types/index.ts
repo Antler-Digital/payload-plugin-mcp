@@ -133,6 +133,8 @@ export interface CollectionAnalysis {
   mcpOptions?: CollectionMcpOptions
   slug: 'all' | CollectionSlug
   timestamps: boolean
+  /** Field name used as title in admin UI (from collection.admin.useAsTitle) */
+  useAsTitle?: string
 }
 
 export type PayloadPluginMcpConfig = {
