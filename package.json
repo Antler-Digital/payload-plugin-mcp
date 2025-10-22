@@ -1,6 +1,6 @@
 {
   "name": "payload-plugin-mcp",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "A PayloadCMS plugin that integrates with MCP (Model Context Protocol) to enable AI model communication and context sharing within PayloadCMS applications",
   "license": "MIT",
   "type": "module",

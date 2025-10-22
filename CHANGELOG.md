@@ -1,3 +1,13 @@
+## [1.4.0](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.3.1...v1.4.0) (2025-10-22)
+
+### Features
+
+* enhance collection descriptions and rich text handling ([7f9aeaa](https://github.com/Antler-Digital/payload-plugin-mcp/commit/7f9aeaa763f9c50e9c59dc57d1e26408c7e6856f))
+
+### Bug Fixes
+
+* resolve security vulnerabilities and Turbopack build issues ([70592e7](https://github.com/Antler-Digital/payload-plugin-mcp/commit/70592e700534aaa27782c2b5e14a72b4b05345c8))
+
 ## [1.3.1](https://github.com/Antler-Digital/payload-plugin-mcp/compare/v1.3.0...v1.3.1) (2025-10-16)
 
 ### Bug Fixes
