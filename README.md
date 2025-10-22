@@ -10,7 +10,8 @@ A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) s
 - ☁️ **Vercel Ready**: Optimized for serverless deployment
 - 🛠️ **Comprehensive Operations**: List, get, create, update, and delete operations
 - 📊 **Rich JSON Schemas**: Automatically generated schemas from collection fields
-- 📝 **Full Claude Desktop Integration**: Ready to use with Claude Desktop
+- 📝 **Rich Text Support**: Automatic markdown conversion with configurable truncation
+- 🎯 **Full Claude Desktop Integration**: Ready to use with Claude Desktop
 - 🎛️ **Per-Collection Control**: Configure operations individually for each collection
 - 🏷️ **Custom Tool Naming**: Custom prefixes and descriptions per collection
 
@@ -677,6 +678,8 @@ MCP_API_KEY=your-production-api-key
 | `apiKey`               | string                         | `process.env.MCP_API_KEY` | API key for authentication         |
 | `collections`          | CollectionMcpConfig[] \| 'all' | 'all'                     | Collections to expose              |
 | `defaultOperations`    | ToolOperations                 | `{list: true, get: true}` | Default operations for collections |
+| `richText`             | object                         | `{truncateInList: 200}`   | Rich text field configuration      |
+| `richText.truncateInList` | number \| undefined         | 200                       | Truncate rich text in list operations (0 = no truncation) |
 | `port`                 | number                         | 3001                      | Server port                        |
 | `host`                 | string                         | '0.0.0.0'                 | Server host                        |
 | `enableHttpTransport`  | boolean                        | true                      | Enable HTTP server                 |
@@ -684,6 +687,56 @@ MCP_API_KEY=your-production-api-key
 | `serverName`           | string                         | 'PayloadCMS MCP Server'   | Server name                        |
 | `serverDescription`    | string                         | Auto-generated            | Server description                 |
 | `disabled`             | boolean                        | false                     | Disable the plugin                 |
+
+## Rich Text Field Handling
+
+The plugin provides comprehensive support for PayloadCMS rich text fields with automatic markdown conversion:
+
+### Features
+
+- **Automatic Conversion**: Rich text fields accept markdown strings for create/update operations
+- **Lexical Integration**: Seamlessly converts between markdown and PayloadCMS's Lexical editor format
+- **Configurable Truncation**: Control how much rich text content is returned in list operations
+- **Error Handling**: Clear error messages for invalid rich text input
+
+### Configuration
+
+```typescript
+PayloadPluginMcp({
+  apiKey: process.env.MCP_API_KEY,
+  collections: 'all',
+  richText: {
+    truncateInList: 200, // Truncate rich text to 200 chars in list operations
+  },
+})
+```
+
+### Usage Examples
+
+**Creating/Updating with Rich Text:**
+```json
+{
+  "data": {
+    "title": "My Post",
+    "content": "# Heading\n\nSome **bold** text with a [link](https://example.com)."
+  }
+}
+```
+
+**List Operations:**
+- Rich text fields are automatically converted to markdown
+- Content is truncated to the configured length (default: 200 characters)
+- Use `get` operations to retrieve full content
+
+**Get Operations:**
+- Full rich text content is returned without truncation
+- Content is converted to markdown for easy reading
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `truncateInList` | number \| undefined | 200 | Truncate rich text in list operations. Set to 0 to disable truncation. |
 
 ## Troubleshooting
 
