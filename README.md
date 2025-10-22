@@ -393,32 +393,12 @@ For local development, you can connect directly:
 
 Connect to your PayloadCMS data remotely using Claude Connectors without desktop setup.
 
-### HTTP Endpoint
+### Connectors
+
+By including the token in the query parameters you can enable Claude on mobile and more easily on desktop. Use the format of the URL below to make this work.
 
 ```
 https://yourpayloadapp.com/api/plugin/mcp?token=<MCP_TOKEN>
-```
-
-### Claude Connectors Configuration
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "payloadcms-remote": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://yourpayloadapp.com/api/plugin/mcp?token=${MCP_API_KEY}"
-      ],
-      "env": {
-        "MCP_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
 ```
 
 This enables remote access from mobile devices and any device with Claude Connectors support.
