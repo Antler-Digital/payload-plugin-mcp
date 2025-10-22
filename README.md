@@ -7,7 +7,7 @@ A comprehensive PayloadCMS plugin that creates an MCP (Model Context Protocol) s
 - 🚀 **Automatic Tool Generation**: Generates MCP tools for all PayloadCMS collections
 - 🔐 **API Key Authentication**: Secure authentication using environment variables
 - 🌐 **HTTP Transport**: Reliable HTTP-based MCP communication
-- 📱 **Mobile & Remote Access**: Connect from mobile devices and remote clients
+- 📱 **Remote Access**: Connect via Claude Connectors from any device
 - ☁️ **Vercel Ready**: Optimized for serverless deployment
 - 🛠️ **Comprehensive Operations**: List, get, create, update, and delete operations
 - 📊 **Rich JSON Schemas**: Automatically generated schemas from collection fields
@@ -389,81 +389,39 @@ For local development, you can connect directly:
 }
 ```
 
-## Remote Access & Mobile Integration
+## Remote Access with Claude Connectors
 
-The plugin provides HTTP endpoints that enable remote access to your PayloadCMS data through MCP-compatible clients, including mobile applications and remote desktop setups.
+Connect to your PayloadCMS data remotely using Claude Connectors without desktop setup.
 
 ### HTTP Endpoint
 
-The plugin exposes an HTTP endpoint at:
 ```
 https://yourpayloadapp.com/api/plugin/mcp?token=<MCP_TOKEN>
 ```
 
-### Benefits of Remote Access
+### Claude Connectors Configuration
 
-- **Mobile Support**: Access your PayloadCMS data from mobile MCP clients
-- **Remote Development**: Connect from any device without local setup
-- **Team Collaboration**: Share access with team members
-- **Cloud Integration**: Works seamlessly with cloud-hosted PayloadCMS instances
+Add to your `claude_desktop_config.json`:
 
-### Authentication
-
-The endpoint uses token-based authentication via query parameter:
-
-```bash
-# Example request
-curl "https://yourpayloadapp.com/api/plugin/mcp?token=your-mcp-api-key"
+```json
+{
+  "mcpServers": {
+    "payloadcms-remote": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://yourpayloadapp.com/api/plugin/mcp?token=${MCP_API_KEY}"
+      ],
+      "env": {
+        "MCP_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
 ```
 
-### Mobile MCP Clients
-
-You can use this endpoint with various MCP-compatible mobile applications:
-
-1. **Claude Mobile** (when MCP support is available)
-2. **Custom MCP clients** for mobile development
-3. **Web-based MCP interfaces**
-
-### Configuration for Remote Access
-
-For production deployments, ensure your PayloadCMS instance is accessible:
-
-```typescript
-// payload.config.ts
-export default buildConfig({
-  // ... your config
-  plugins: [
-    PayloadPluginMcp({
-      apiKey: process.env.MCP_API_KEY,
-      collections: 'all',
-      enableHttpTransport: true, // Enable HTTP transport
-    }),
-  ],
-})
-```
-
-### Security Considerations
-
-- **HTTPS Only**: Always use HTTPS in production
-- **Token Security**: Keep your MCP API key secure
-- **Rate Limiting**: Consider implementing rate limiting for production use
-- **CORS**: Configure CORS if accessing from web clients
-
-### Example Mobile Integration
-
-```javascript
-// Example mobile client integration
-const mcpClient = new MCPClient({
-  endpoint: 'https://yourpayloadapp.com/api/plugin/mcp',
-  token: 'your-mcp-api-key'
-});
-
-// List posts
-const posts = await mcpClient.callTool('posts_list', {
-  limit: 10,
-  where: { status: { equals: 'published' } }
-});
-```
+This enables remote access from mobile devices and any device with Claude Connectors support.
 
 ## Cursor Integration
 
