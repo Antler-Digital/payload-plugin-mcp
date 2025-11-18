@@ -44,7 +44,7 @@ export function buildInputZodShape(
         fields: z
           .array(z.string())
           .describe(
-            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return (dot notation). If omitted, Payload returns all fields. When provided, 'id' is automatically included for collections.",
           )
           .optional(),
       }
@@ -71,7 +71,7 @@ export function buildInputZodShape(
           .default(0)
           .describe('Depth of population for relationships')
           .optional(),
-        draft: z
+        isDraft: z
           .boolean()
           .describe(
             'Whether to return draft version (true) or published version (false). Omit to get latest regardless of status.',
@@ -80,7 +80,7 @@ export function buildInputZodShape(
         fields: z
           .array(z.string())
           .describe(
-            "Optional list of field paths to return (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return (dot notation). If omitted, Payload returns all fields. When provided, 'id' is automatically included for collections.",
           )
           .optional(),
       }
@@ -167,7 +167,7 @@ export function buildInputZodShape(
         fields: z
           .array(z.string())
           .describe(
-            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return in response (dot notation). If omitted, Payload returns all fields. When provided, 'id' is automatically included for collections.",
           )
           .optional(),
       }
@@ -216,7 +216,7 @@ export function buildInputZodShape(
         fields: z
           .array(z.string())
           .describe(
-            "Optional list of field paths to return in response (dot notation). Defaults to all top-level fields; 'id' is always included for collections.",
+            "Optional list of field paths to return in response (dot notation). If omitted, Payload returns all fields. When provided, 'id' is automatically included for collections.",
           )
           .optional(),
       }
