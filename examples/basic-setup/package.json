@@ -13,7 +13,7 @@
     "@payloadcms/db-mongodb": "latest",
     "@payloadcms/next": "latest",
     "@payloadcms/richtext-lexical": "latest",
-    "next": "15.3.0",
+    "next": "15.3.6",
     "payload": "latest",
     "payload-plugin-mcp": "latest",
     "react": "19.1.0",
